@@ -1,0 +1,7 @@
+# Esempio di pacchetti
+pandas
+numpy
+# PyTorch con supporto CUDA 13.0
+# torch==2.3.0+cu130
+# torchvision==0.16.0+cu130
+# torchaudio==2.0.0+cu130

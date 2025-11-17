@@ -1,1 +1,0 @@
-print("Ciao mondo, questo è uno script Python!")
