@@ -1,3 +1,15 @@
 .venv/
 __pycache__/
 rsna-pneumonia-detection-challenge/
+dataset_preProcessed/
+venv/
+run_train.slurm
+error_detect.txt
+modello_detection_epoch_1.pth
+modello_detection_epoch_2.pth
+modello_detection_epoch_3.pth
+modello_detection_epoch_4.pth
+modello_detection_epoch_5.pth
+modello_detection_polmonite.pth
+output_detect.txt
+.gitignore
