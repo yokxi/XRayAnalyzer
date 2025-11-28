@@ -108,9 +108,3 @@ Il progetto include una Web App per testare il modello in tempo reale.
     ```
 4.  Aprire il browser all'indirizzo: [http://localhost:5000](http://localhost:5000)
 
-### Esecuzione dal Web (Cloud)
-
-**Git/GitHub serve solo per ospitare il codice**, non per eseguirlo direttamente. Per usare l'app senza installare nulla sul tuo computer, hai due opzioni principali:
-
-1.  **GitHub Codespaces**: Se carichi questo codice su GitHub, puoi cliccare su "Code" -> "Codespaces" per avviare un computer virtuale nel cloud. Lì potrai eseguire i comandi sopra.
-2.  **Hosting (Render/Heroku)**: Per avere un sito sempre attivo (es. `www.mioprogetto.com`), devi caricare il codice su piattaforme come Render, Heroku o PythonAnywhere.
