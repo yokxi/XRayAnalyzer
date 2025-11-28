@@ -64,6 +64,24 @@ L'avvio del container è gestito dallo script **run.sh**, che accetta due argome
 
 ---
 
+## 📦 Gestione del Modello AI (Git LFS)
+
+Il file del modello (`web_app/modello_detection_polmonite.pth`) supera i 100MB, il limite standard di GitHub. Per questo motivo, il progetto utilizza **Git Large File Storage (LFS)**.
+
+### Come caricare aggiornamenti del modello
+Se riaddestri il modello e devi caricare una nuova versione su GitHub, segui questi passaggi tassativi per evitare errori di upload:
+
+1. **Installa Git LFS**:
+   ```bash
+   git lfs install
+    ```
+1. **Assicurati che il file sia tracciato da LFS:** :
+   ```bash
+   git lfs track "web_app/modello_detection_polmonite.pth"
+    ```
+
+---
+
 ## 🌐 Web App (MediScan AI)
 
 Il progetto include una Web App per testare il modello in tempo reale.
