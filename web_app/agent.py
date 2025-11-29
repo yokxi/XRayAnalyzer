@@ -3,34 +3,47 @@ import random
 
 class MedicalAgent:
     def __init__(self):
-        # Carica il file di testo al'avvio
+        # Percorso base dove si trova questo file
         self.base_path = os.path.dirname(os.path.abspath(__file__))
-        self.kb_path = os.path.join(self.base_path, "knowledge_base", "info_mediche.txt")
+        # Percorso della cartella contenente i file di testo
+        self.kb_dir = os.path.join(self.base_path, "knowledge_base")
+        # Caricamento della conoscenza
         self.knowledge = self._load_knowledge()
 
     def _load_knowledge(self):
-        """Legge il file txt e lo divide in sezioni"""
+        """Legge TUTTI i file .txt nella cartella knowledge_base"""
         kb = {}
-        try:
-            with open(self.kb_path, "r", encoding="utf-8") as f:
-                content = f.read()
-                # Parsing molto semplice basato sui titoli [TITOLO]
-                sections = content.split("[")
-                for sec in sections:
-                    if "]" in sec:
-                        title, body = sec.split("]", 1)
-                        kb[title.strip()] = body.strip()
-            return kb
-        except Exception as e:
-            print(f"⚠️ Errore caricamento KB: {e}")
+        
+        # 1. Controlla se la cartella esiste
+        if not os.path.exists(self.kb_dir):
+            print(f"⚠️ Cartella Knowledge Base non trovata: {self.kb_dir}")
             return {}
 
+        print(f"📂 Scansione Knowledge Base in corso...")
+
+        # 2. Ciclo su tutti i file della cartella
+        for filename in os.listdir(self.kb_dir):
+            if filename.endswith(".txt"):
+                file_path = os.path.join(self.kb_dir, filename)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        
+                        # 3. Parsing: Cerca i blocchi tra parentesi [TITOLO]
+                        sections = content.split("[")
+                        for sec in sections:
+                            if "]" in sec:
+                                title, body = sec.split("]", 1)
+                                kb[title.strip()] = body.strip()
+                                print(f"   📘 Caricato: [{title.strip()}] da {filename}")
+                                
+                except Exception as e:
+                    print(f"❌ Errore lettura file {filename}: {e}")
+        
+        return kb
+
     def generate_report(self, num_boxes, max_score):
-        """
-        Questa funzione simula il ragionamento dell'Agente.
-        Input: Dati dal tuo modello Faster R-CNN (Visione)
-        Output: Report medico testuale (RAG)
-        """
+        """Genera un report ricco usando diverse fonti della Knowledge Base"""
         
         # CASO 1: PAZIENTE SANO
         if num_boxes == 0:
@@ -40,23 +53,33 @@ class MedicalAgent:
                 "testo": self.knowledge.get("SANO", "Nessuna anomalia rilevata.")
             }
 
-        # CASO 2: PAZIENTE MALATO (POLMONITE)
-        # Recuperiamo le info mediche dalla memoria (RAG simulato)
-        info_cliniche = self.knowledge.get("POLMONITE_BATTERICA", "Dati non disponibili.")
+        # CASO 2: PAZIENTE MALATO
+        # Recuperiamo informazioni da DIVERSI file
+        # Nota: Se vedi "N/D", controlla che i titoli nei file txt siano scritti esattamente così
         
-        # Costruiamo il report in modo dinamico
+        info_sintomi = self.knowledge.get("SINTOMI_COMUNI", "Dati non disponibili.")
+        info_trattamento = self.knowledge.get("LINEE_GUIDA_AIFA", "Protocollo non trovato.")
+        info_rischi = self.knowledge.get("COMPLICAZIONI_POLMONARI", "Nessun rischio specifico segnalato.")
+        
         livello_confidenza = "ALTA" if max_score > 0.8 else "MEDIA"
         
+        # Costruiamo il report completo
         testo_report = f"""
         RILEVAMENTI VISIVI (Faster R-CNN):
-        • Identificate {num_boxes} aree di consolidamento parenchimale.
-        • Confidenza del modello: {max_score:.1%} ({livello_confidenza}).
+        • Identificate {num_boxes} aree di opacità polmonare.
+        • Affidabilità diagnosi: {max_score:.1%} ({livello_confidenza}).
         
-        NOTE CLINICHE E PROTOCOLLO (da Knowledge Base):
-        {info_cliniche}
+        QUADRO CLINICO ATTESO (Fonte: Knowledge Base):
+        {info_sintomi}
+        
+        PROTOCOLLO TERAPEUTICO UFFICIALE (Fonte: AIFA):
+        {info_trattamento}
+        
+        ⚠️ NOTE SU PROGNOSI E RISCHI:
+        {info_rischi}
         
         RACCOMANDAZIONE AGENTE:
-        Si consiglia correlazione clinico-strumentale urgente data la presenza di opacità.
+        Si consiglia valutazione pneumologica urgente.
         """
 
         return {

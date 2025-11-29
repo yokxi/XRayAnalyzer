@@ -1,0 +1,11 @@
+[PREVENZIONE_VACCINALE]
+La vaccinazione è il pilastro della prevenzione, specialmente per le categorie fragili.
+1. Vaccino Anti-Pneumococcico: Protegge dallo Streptococcus pneumoniae, la causa più comune di polmonite batterica grave.
+   - Raccomandato per: Bambini < 2 anni, Adulti > 65 anni, soggetti con patologie croniche.
+   - Schema sequenziale: Vaccino coniugato (PCV13 o PCV20) seguito eventualemente dal polisaccaridico (PPSV23).
+2. Vaccino Antinfluenzale: Riduce il rischio di polmonite virale primaria e, soprattutto, delle sovrainfezioni batteriche secondarie all'influenza stagionale.
+
+[FATTORI_DI_RISCHIO_MODIFICABILI]
+- Fumo di Sigaretta: Paralizza l'apparato muco-ciliare, riducendo la capacità naturale dei bronchi di espellere germi e secrezioni. La cessazione del fumo riduce drasticamente il rischio.
+- Igiene Orale: Una scarsa igiene dentale aumenta il rischio di polmonite ab ingestis (aspirazione di batteri dalla bocca ai polmoni), specialmente negli anziani.
+- Disfagia: Nei pazienti con difficoltà a deglutire, è necessario modificare la consistenza dei cibi per prevenire l'aspirazione.

@@ -1,0 +1,15 @@
+[FISIOPATOLOGIA_INFEZIONE]
+La polmonite è definita come l'infiammazione acuta del parenchima polmonare distale ai bronchioli terminali.
+Il processo patologico fondamentale è il "Consolidamento":
+1. L'agente patogeno raggiunge gli alveoli (solitamente per inalazione o micro-aspirazione).
+2. Si scatena una risposta infiammatoria con rilascio di citochine.
+3. I capillari alveolari diventano permeabili, lasciando passare liquido ed eritrociti (globuli rossi).
+4. I neutrofili migrano nell'alveolo per combattere i batteri.
+5. Risultato: Lo spazio aereo alveolare, normalmente pieno di gas, si riempie di un essudato infiammatorio (pus), impedendo lo scambio gassoso e apparendo "bianco" ai Raggi X.
+
+[FASI_ANATOMO_PATOLOGICHE]
+Classicamente si distinguono 4 stadi nella polmonite lobare non trattata:
+1. Congestione (Giorno 1-2): Polmone pesante, rosso, iperemico.
+2. Epatizzazione Rossa (Giorno 3-4): Alveoli pieni di emazie, fibrina e batteri. Il tessuto assomiglia al fegato.
+3. Epatizzazione Grigia (Giorno 5-7): Lisi delle emazie, prevalenza di neutrofili e fibrina.
+4. Risoluzione (Giorno 8+): I macrofagi rimuovono i detriti, l'architettura alveolare viene ripristinata.

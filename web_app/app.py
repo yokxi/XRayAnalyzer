@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 import torch
 from model_utils import load_model, get_prediction
-from agent import MedicalAgent  # <--- 1. IMPORTIAMO L'AGENTE
+from agent import MedicalAgent  
 import io
 
 app = Flask(__name__)
@@ -25,7 +25,7 @@ except Exception as e:
 
 # Caricamento Agente (Cervello)
 try:
-    agent = MedicalAgent() # <--- 2. INIZIALIZZIAMO L'AGENTE
+    agent = MedicalAgent() 
     print("✅ Agente Medico Attivo.")
 except Exception as e:
     print(f"❌ Errore Agente: {e}")
@@ -53,12 +53,12 @@ def predict():
         max_score = max(scores) if scores else 0.0
         
         # FASE 2: RAGIONAMENTO (L'Agente scrive il report)
-        report_data = agent.generate_report(num_boxes, max_score) # <--- 3. CHIAMIAMO L'AGENTE
+        report_data = agent.generate_report(num_boxes, max_score) 
         
         return jsonify({
             'boxes': boxes,
             'scores': scores,
-            'report': report_data # <--- 4. MANDIAMO IL REPORT AL SITO
+            'report': report_data 
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

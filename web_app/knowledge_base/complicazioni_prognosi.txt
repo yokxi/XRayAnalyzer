@@ -1,0 +1,14 @@
+[COMPLICAZIONI_POLMONARI]
+Se non trattata tempestivamente, la polmonite batterica può evolvere in:
+- Versamento Pleurico Parapneumonico: Accumulo di liquido reattivo nello spazio pleurico. Se si infetta, diventa Empiema (raccolta di pus) che richiede drenaggio chirurgico urgente.
+- Ascesso Polmonare: Necrosi del tessuto polmonare con formazione di cavità contenenti materiale purulento, spesso causato da Stafilococco aureo o anaerobi.
+- Atelettasia: Collasso di una parte del polmone dovuto all'ostruzione dei bronchi da parte di secrezioni dense.
+
+[COMPLICAZIONI_SISTEMICHE]
+- Sepsi e Shock Settico: Disseminazione dell'infezione nel torrente ematico con grave ipotensione e insufficienza multiorgano (MOF).
+- Insufficienza Respiratoria (ARDS): Danno alveolare diffuso che impedisce lo scambio di ossigeno, richiedendo ventilazione meccanica.
+
+[TEMPI_DI_GUARIGIONE]
+- Defervescenza (Scomparsa febbre): Solitamente entro 48-72 ore dall'inizio dell'antibiotico appropriato.
+- Tosse e Astenia: Possono persistere per diverse settimane.
+- Clearance Radiologica: La radiografia del torace può mostrare segni di opacità residua per 4-6 settimane, anche a guarigione clinica avvenuta. Non ripetere RX troppo presto se il paziente sta bene.

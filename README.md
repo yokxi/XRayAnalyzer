@@ -15,9 +15,21 @@
 
 ## 📖 About The Project
 
-This repository contains the code for **XRayAnalyzer**, a project designed to assist in medical diagnosis by **detecting and localizing potential anomalies** in chest X-rays.
+**XRayAnalyzer** è un assistente diagnostico intelligente progettato per supportare l'analisi di radiografie toraciche. A differenza dei classificatori standard, questo sistema combina due tecnologie avanzate:
 
-The primary goal is to **identify suspicious areas (e.g., nodules, opacities, or other pathologies)** that may require further medical review. This project is part of my M.Sc. in Computer Science at the University of Parma.
+1.  **Visione (Deep Learning):** Un modello **Faster R-CNN** (addestrato su HPC) localizza con precisione le opacità polmonari disegnando Bounding Box.
+2.  **Ragionamento (Agente AI):** Un modulo logico (RAG) consulta una **Knowledge Base medica locale** per generare un referto testuale completo, suggerendo protocolli terapeutici basati sulle evidenze visive.
+
+Questo progetto è stato sviluppato come parte del corso di *Applicazione industriali dell'intelligenza artificiale* (Laurea Magistrale in Informatica, Università di Parma).
+
+---
+
+## 🚀 Caratteristiche Principali
+
+* **Object Detection:** Localizzazione precisa delle anomalie (non solo classificazione).
+* **Knowledge Base Estendibile:** L'agente legge dinamicamente file `.txt` (protocolli, linee guida AIFA, sintomi) per costruire le risposte.
+* **Architettura Ibrida:** Unisce l'accuratezza di una CNN classica con la flessibilità di un sistema a regole/agenti.
+* **Dockerized:** Ambiente completamente isolato e riproducibile.
 
 ---
 
@@ -83,21 +95,47 @@ Se riaddestri il modello e devi caricare una nuova versione su GitHub, segui que
 
 ## 🌐 Web App (MediScan AI)
 
-Il progetto include una Web App per testare il modello in tempo reale.
+Il progetto include una Web App interattiva basata su Flask per testare il modello in tempo reale. Puoi avviarla in due modi:
 
-### Esecuzione Locale
+### 🐳 Opzione 1: Esecuzione con Docker (Consigliata)
+Questo metodo garantisce che l'ambiente sia identico a quello di sviluppo, evitando errori di dipendenze.
 
-1.  Spostarsi nella cartella della web app:
+1.  **Avvia il container** mappando la porta 5000 e la cartella corrente:
+    * **Windows (PowerShell):**
+        ```powershell
+        docker run --rm -it -p 5000:5000 -v "${PWD}:/app" app_ind_ai:latest
+        ```
+    * **Linux / Mac:**
+        ```bash
+        docker run --rm -it -p 5000:5000 -v "$(pwd):/app" app_ind_ai:latest
+        ```
+
+2.  **Lancia l'applicazione** (dentro il terminale del container):
+    ```bash
+    python3 web_app/app.py
+    ```
+
+3.  **Apri il browser** all'indirizzo: [http://localhost:5000](http://localhost:5000)
+
+---
+
+### 💻 Opzione 2: Esecuzione Locale
+Se preferisci eseguire l'app direttamente sul tuo computer senza Docker:
+
+1.  **Spostati nella cartella della web app**:
     ```bash
     cd web_app
     ```
-2.  Installare le dipendenze:
+
+2.  **Installa le dipendenze** (si consiglia di usare un virtual environment):
     ```bash
     pip install -r requirements.txt
     ```
-3.  Avviare il server:
+
+3.  **Avvia il server**:
     ```bash
     python app.py
     ```
-4.  Aprire il browser all'indirizzo: [http://localhost:5000](http://localhost:5000)
+
+4.  **Apri il browser** all'indirizzo: [http://localhost:5000](http://localhost:5000)
 

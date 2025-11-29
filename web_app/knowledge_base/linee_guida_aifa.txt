@@ -1,0 +1,19 @@
+[LINEE_GUIDA_AIFA]
+FONTE: Agenzia Italiana del Farmaco (AIFA) - Guida all'uso degli antimicrobici.
+La terapia empirica delle polmoniti acquisite in comunità (CAP) nel paziente immunocompetente si basa sulla stratificazione del rischio.
+1. Pazienti a basso rischio (trattati a domicilio):
+   - Amoxicillina: 1g ogni 8 ore per os.
+   - In caso di allergia IgE-mediata alle penicilline: Claritromicina 500mg ogni 12 ore o Azitromicina 500mg/die.
+   - La levofloxacina è da riservare a casi specifici per evitare l'insorgenza di resistenze.
+
+2. Pazienti a rischio moderato/alto (ospedalizzati):
+   - Associazione di Beta-lattamico (es. Ceftriaxone) + Macrolide (es. Claritromicina) per coprire germi atipici come Legionella pneumophila.
+
+[CRITERI_RICOVERO]
+La decisione di ospedalizzare si basa spesso sullo score CURB-65, che valuta:
+- Confusione mentale.
+- Urea (azotemia) > 7 mmol/L.
+- Respiratory Rate (frequenza respiratoria) ≥ 30 atti/min.
+- Blood Pressure (pressione arteriosa) sistolica < 90 mmHg o diastolica ≤ 60 mmHg.
+- Età ≥ 65 anni.
+Punteggio ≥ 2 suggerisce ospedalizzazione.
