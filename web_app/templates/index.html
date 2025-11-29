@@ -58,25 +58,38 @@
                 </div>
             </section>
 
-            <section class="result-section" id="result-section" style="display: none;">
-                <div class="result-card fade-in">
-                    <div class="result-header">
-                        <h2>Analysis Result</h2>
-                        <button id="reset-btn" class="icon-btn" title="Analyze New Image">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                </path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="canvas-wrapper">
-                        <canvas id="result-canvas"></canvas>
-                        <div class="loading-overlay" id="loading-overlay">
-                            <div class="medical-spinner"></div>
-                            <p>Analyzing Scan...</p>
+           <section class="result-section" id="result-section" style="display: none; height: 85vh; padding-top: 1rem;">
+                
+                <div style="display: flex; gap: 2rem; height: 100%; max-width: 1400px; margin: 0 auto; align-items: stretch;">
+
+                    <div class="result-card fade-in" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div class="result-header" style="flex-shrink: 0;">
+                            <h2>Analisi Visiva</h2>
+                            <button id="reset-btn" class="icon-btn" title="Analyze New Image">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="canvas-wrapper" style="flex-grow: 1; background: #000; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 0.5rem;">
+                            <canvas id="result-canvas" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
+                            <div class="loading-overlay" id="loading-overlay">
+                                <div class="medical-spinner"></div>
+                                <p>Generazione Analisi...</p>
+                            </div>
                         </div>
                     </div>
+
+                    <div id="medical-report" class="result-card fade-in" style="display: none; flex: 1; border-left: 8px solid #ccc; overflow-y: auto;">
+                        <div class="report-header" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white;">
+                            <h2 id="report-title" style="font-size: 1.8rem; margin: 0;"></h2>
+                        </div>
+                        <div class="report-body">
+                            <p id="report-text" style="white-space: pre-line; font-size: 1.1rem; line-height: 1.6; color: #1e293b;"></p>
+                        </div>
+                    </div>
+
                 </div>
             </section>
         </main>

@@ -1,0 +1,17 @@
+[POLMONITE_BATTERICA]
+Sintomi: Febbre alta, tosse produttiva, dolore toracico, dispnea.
+Segni Radiologici: Opacità alveolari lobari o segmentali, broncogramma aereo.
+Trattamento Prima Linea: Amoxicillina 1g ogni 8 ore per 7 giorni.
+Trattamento Alternativo: Claritromicina 500mg ogni 12 ore (se allergia a penicillina).
+Note: Richiede monitoraggio saturazione ossigeno.
+
+[POLMONITE_VIRALE]
+Sintomi: Febbre lieve, tosse secca, mialgia.
+Segni Radiologici: Opacità interstiziali diffuse ("vetro smerigliato").
+Trattamento: Supporto sintomatico, idratazione, antipiretici.
+Note: Gli antibiotici non sono efficaci.
+
+[SANO]
+Il quadro radiologico non mostra alterazioni pleuro-parenchimali in atto.
+Ombra cardiaca nei limiti.
+Seni costofrenici liberi.

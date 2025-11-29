@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.style.display = 'none';
         dropZone.style.display = 'block';
         fileInput.value = '';
+
+        document.getElementById('medical-report').style.display = 'none';
     });
 
     function handleFile(file) {
@@ -74,7 +76,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Prediction failed');
 
             const data = await response.json();
+            
+            // 1. Disegna i box rossi (codice vecchio)
             drawBoxes(data.boxes, data.scores);
+
+            // 2. Gestione del Report Medico (CODICE NUOVO)
+            // ---------------------------------------------------------
+            const reportBox = document.getElementById('medical-report');
+            const reportTitle = document.getElementById('report-title');
+            const reportText = document.getElementById('report-text');
+
+            if (data.report) {
+                // Rendi visibile il box del report
+                reportBox.style.display = 'block';
+
+                // Inserisci il titolo e il testo ricevuti da Python
+                reportTitle.textContent = data.report.titolo;
+                reportText.textContent = data.report.testo;
+
+                // Cambia i colori in base alla gravità (Rosso o Verde)
+                reportTitle.style.color = data.report.colore;
+                reportBox.style.borderLeftColor = data.report.colore;
+            }
+            // ---------------------------------------------------------
+
         } catch (error) {
             console.error('Error:', error);
             alert('An error occurred during analysis.');
@@ -83,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resetBtn.style.display = 'inline-block';
         }
     }
-
     function drawBoxes(boxes, scores) {
         ctx.lineWidth = 4;
         ctx.font = '24px Arial';
