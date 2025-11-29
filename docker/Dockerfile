@@ -14,6 +14,8 @@ RUN apt-get update && \
     curl \
     wget \
     nano \
+    libgl1 \
+    libglib2.0-0 \
     && \
     add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
@@ -55,6 +57,9 @@ RUN \
     fi \
   ) && \
   useradd --create-home --shell /bin/bash --uid ${USER_ID} ${USERNAME}
+
+# Assegna la proprietà della cartella venv all'utente 'dev'
+RUN chown -R ${USERNAME}:${USERNAME} $VENV_PATH
 
 USER ${USERNAME}
 

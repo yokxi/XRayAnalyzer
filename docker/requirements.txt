@@ -1,7 +1,20 @@
 # Esempio di pacchetti
 pandas
 numpy
-# PyTorch con supporto CUDA 13.0
-# torch==2.3.0+cu130
-# torchvision==0.16.0+cu130
-# torchaudio==2.0.0+cu130
+streamlit
+python-dotenv
+
+# AI & LLM (Groq)
+langchain
+langchain-groq
+langchain-community
+
+# Computer Vision & YOLO
+ultralytics
+# IMPORTANTE: usa la versione headless per Docker per evitare errori "libGL.so"
+opencv-python-headless
+
+# RAG
+pypdf
+faiss-cpu
+sentence-transformers

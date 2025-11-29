@@ -41,6 +41,10 @@ echo ""
 docker run --rm -it \
     --platform linux/amd64 \
     $DOCKER_GPU_ARGS \
+    -p 8501:8501 \
+    -e STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    -e PYTHONPATH=/app \
+    --env-file .env \
     -v "${PROJECT_DIR}:/app" \
     ${IMAGE_NAME} \
     bash

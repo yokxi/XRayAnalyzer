@@ -1,8 +1,0 @@
-# File di sistema
-.DS_Store
-*.pyc
-__pycache__/
-
-# Ignora venv locali (se ne crei uno per errore sull'host)
-/venv/
-/.venv/

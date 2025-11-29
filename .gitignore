@@ -1,3 +1,55 @@
-.venv/
+# ======================================
+# 1. FILE DI SISTEMA E PYTHON
+# ======================================
+# Ignora file temporanei
+.DS_Store
 __pycache__/
-rsna-pneumonia-detection-challenge/
+*.pyc
+*.pyo
+*.pyd
+
+# ======================================
+# 2. AMBIENTI VIRTUALI (Venv)
+# ======================================
+# Ignora le cartelle degli ambienti virtuali ovunque si trovino
+.venv/
+venv/
+env/
+
+# ======================================
+# 3. SICUREZZA
+# ======================================
+# Ignora i file .env in qualsiasi cartella (root, docker, pneumonia_project...)
+.env
+*.env
+docker/.env
+
+# ======================================
+# 4. DATASET E ARCHIVI GIGANTI (Dalla tua foto) E TEST
+# ======================================
+# Ignora lo zip originale e la cartella del dataset estratto
+archive.zip
+pneumonia_project/temp/*
+
+# # ======================================
+# # 5. OUTPUT E LOG HPC (Dalla tua foto)
+# # ======================================
+# # Ignora le cartelle dove finiscono i risultati del training e i log
+# train_logs/
+# HPC_Runs_SEG/
+# HPC_Runs/
+
+# # Ignora i file di output singoli di Slurm
+# *.out
+# *.err
+
+# ======================================
+# 6. MODELLI AI (Pesi)
+# ======================================
+# Ignora tutti i file pesanti dei modelli
+# *.pt
+# *.pth
+# *.onnx
+
+# # ECCEZIONE: Vogliamo caricare SOLO il modello migliore (best.pt)
+# !best.pt
