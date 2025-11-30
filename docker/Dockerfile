@@ -17,7 +17,6 @@ RUN apt-get update && \
     && \
     add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
-    # 
     apt-get install -y python3.13 python3.13-venv python3-pip
 
 # 3. Creiamo un virtual environment globale per il container
@@ -25,27 +24,29 @@ ENV VENV_PATH=/opt/venv
 RUN python3.13 -m venv $VENV_PATH
 
 # 4. AGGIUNGIAMO IL VENV AL PATH
-# I comandi 'python' e 'pip' useranno automaticamente questo venv, senza 'source activate'
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-# 5. Prepariamo la cartella di lavoro e installiamo le dipendenze
+# Aggiungiamo /app al PYTHONPATH così Python trova i moduli 'src' e 'web_app'
+ENV PYTHONPATH="${PYTHONPATH}:/app"
+# -----------------------------
+
+# 5. Prepariamo la cartella di lavoro
 WORKDIR /app
+
+# (A) PRIMA installiamo PyTorch CPU (Veloce e Leggero)
+RUN pip install --no-cache-dir --default-timeout=100 \
+    torch torchvision torchaudio \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# (B) POI copiamo il file dei requisiti e installiamo il resto
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# NUOVO STEP: Installazione specifica per PyTorch con CUDA 13.0
-# Questo usa l'indice di pacchetti specifico per la versione CUDA
-#DA COMMENTARE SE IL PROPRIO COMPUTER NON HA UNA GPU NVIDIA
-RUN pip install --no-cache-dir torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cu130
-
-# 6. Creiamo un utente 'dev' con lo stesso ID del tuo utente host
-ARG USER_ID=1000
+ARG USER_ID=1000 
 ARG USERNAME=dev
+# -----------------------------
 
-# Controlla se l'ID utente (passato come ${USER_ID}) è già in uso.
-# Se sì, cancella l'utente esistente
-# prima di creare quello nuovo. Questo evita l'errore "UID not unique".
+# Controlla se l'ID utente è già in uso e crea l'utente
 RUN \
   ( \
     if getent passwd ${USER_ID} > /dev/null 2>&1; then \

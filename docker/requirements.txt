@@ -1,9 +1,13 @@
-# Esempio di pacchetti
 pandas
 numpy
 flask
 pillow
-# PyTorch con supporto CUDA 13.0
-# torch==2.3.0+cu130
-# torchvision==0.16.0+cu130
-# torchaudio==2.0.0+cu130
+streamlit
+langchain
+langchain-community
+langchain-huggingface
+faiss-cpu
+pypdf
+python-dotenv
+sentence-transformers
+# ho tolto torch e torchvision perché vengono installati automaticamente con langchain-huggingface
