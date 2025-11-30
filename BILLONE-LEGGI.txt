@@ -65,7 +65,4 @@ python3 web_app/app.py
 
 L'interfaccia è su http://localhost:5000.
 
-Fammi sapere che ne pensi! Abbiamo un sistema che unisce Ingegneria del Software (la tua struttura modulare) e Calcolo Scientifico (il mio modello HPC).
-
-A presto,
-Aurora
+fammi sapere !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
