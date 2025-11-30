@@ -35,7 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.addEventListener('click', () => {
         resultSection.style.display = 'none';
         resetBtn.style.display = 'none';
-        dropZone.style.display = 'block';
+        const heroSection = document.querySelector('.hero-section');
+        heroSection.style.display = 'flex'; // Restore hero section
+        dropZone.style.display = 'block'; // Ensure dropzone is visible within hero if needed (though we hid the parent)
         fileInput.value = '';
 
         document.getElementById('medical-report').style.display = 'none';
@@ -47,7 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        dropZone.style.display = 'none';
+        const heroSection = document.querySelector('.hero-section');
+        heroSection.style.display = 'none';
+
         resultSection.style.display = 'block';
         loadingOverlay.style.display = 'flex';
         resetBtn.style.display = 'none';
@@ -67,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('file', file);
 
+        const scanLine = document.getElementById('scan-line');
+        scanLine.style.display = 'block'; // Start scanning effect
+
         try {
             const response = await fetch('/predict', {
                 method: 'POST',
@@ -76,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Prediction failed');
 
             const data = await response.json();
-            
+
             // 1. Disegna i box rossi (codice vecchio)
             drawBoxes(data.boxes, data.scores);
 
@@ -88,24 +95,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.report) {
                 // Rendi visibile il box del report
-                reportBox.style.display = 'block';
+                reportBox.style.display = 'flex'; // Changed to flex for new layout
+                reportBox.classList.remove('fade-in'); // Reset animation
+                void reportBox.offsetWidth; // Trigger reflow
+                reportBox.classList.add('fade-in');
 
-                // Inserisci il titolo e il testo ricevuti da Python
+                // Inserisci il titolo
                 reportTitle.textContent = data.report.titolo;
-                reportText.textContent = data.report.testo;
+
+                // Formatta il testo del report (HTML)
+                // Converte i newlines in <br> e aggiunge stili
+                let formattedText = data.report.testo
+                    .replace(/\n/g, '<br>')
+                    .replace(/RILEVAMENTI VISIVI/g, '<strong style="color: var(--secondary);">RILEVAMENTI VISIVI</strong>')
+                    .replace(/QUADRO CLINICO/g, '<strong style="color: var(--secondary);">QUADRO CLINICO</strong>')
+                    .replace(/PROTOCOLLO SUGGERITO/g, '<strong style="color: var(--secondary);">PROTOCOLLO SUGGERITO</strong>')
+                    .replace(/RISCHI E COMPLICAZIONI/g, '<strong style="color: #ef4444;">RISCHI E COMPLICAZIONI</strong>')
+                    .replace(/RACCOMANDAZIONE AGENTE/g, '<strong style="color: var(--primary);">RACCOMANDAZIONE AGENTE</strong>')
+                    .replace(/•/g, '<span style="color: var(--primary); margin-right: 5px;">•</span>');
+
+                reportText.innerHTML = formattedText;
 
                 // Cambia i colori in base alla gravità (Rosso o Verde)
-                reportTitle.style.color = data.report.colore;
-                reportBox.style.borderLeftColor = data.report.colore;
+                // Using CSS variables or inline styles for dynamic colors
+                const color = data.report.colore;
+                reportTitle.style.color = color;
+
+                // Optional: Add a subtle border glow based on result
+                reportBox.style.boxShadow = `0 0 20px ${color}40`; // 40 is hex opacity
+                reportBox.style.borderColor = `${color}80`;
             }
-            // ---------------------------------------------------------
 
         } catch (error) {
             console.error('Error:', error);
             alert('An error occurred during analysis.');
         } finally {
             loadingOverlay.style.display = 'none';
-            resetBtn.style.display = 'inline-block';
+            scanLine.style.display = 'none'; // Stop scanning effect
+            resetBtn.style.display = 'flex'; // Use flex to center icon
         }
     }
     function drawBoxes(boxes, scores) {
