@@ -1,20 +1,24 @@
-# Esempio di pacchetti
+# Core & UI
 pandas
 numpy
 streamlit
 python-dotenv
 
-# AI & LLM (Groq)
+# AI Orchestration (LangChain)
 langchain
-langchain-groq
 langchain-community
+langchain-core
+langchain-text-splitters  # Per il MarkdownHeaderTextSplitter
+
+# LLM
+langchain-groq
 
 # Computer Vision & YOLO
 ultralytics
-# IMPORTANTE: usa la versione headless per Docker per evitare errori "libGL.so"
+# IMPORTANTE: La versione headless per Docker per evitare errori "libGL.so"
 opencv-python-headless
 
 # RAG
-pypdf
-faiss-cpu
-sentence-transformers
+chromadb                # Il Database Vettoriale
+langchain-chroma        # Il connettore ufficiale LangChain-Chroma
+fastembed               # Il modello di embedding
