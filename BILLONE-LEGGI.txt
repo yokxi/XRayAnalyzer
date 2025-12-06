@@ -1,0 +1,68 @@
+OGGETTO: Integrazione Progetto XRayAnalyzer - Unione Architettura Agenti + Modello HPC
+
+allora billone *guarda il branch nuovo-auri in cui ho fatto tutte le modifiche*
+
+Ho lavorato sul codice per unire la tua architettura ad Agenti  con la parte di Deep Learning che ho sviluppato sull'HPC.
+
+Ho creato una versione "Ibrida" che secondo me spacca. Ecco un riassunto delle modifiche e, soprattutto, il PERCHÉ le ho fatte :
+
+1. IL "CERVELLO VISIVO": DA YOLO A FASTER R-CNN (Custom)
+
+Cosa ho fatto:
+Ho sostituito il modulo vision.py che usava YOLO  con un adapter personalizzato per il mio modello Faster R-CNN (ResNet50).
+
+Perché è meglio per l'esame:
+- Validazione HPC: YOLO è un modello pre-addestrato commerciale ("Black Box"). Usando Faster R-CNN addestrato da zero su HPC dell'università, dimostriamo di saper gestire l'intero ciclo di vita del Deep Learning (Dataset -> Training Loop -> Validazione).
+- Precisione vs Velocità: YOLO è ottimizzato per la velocità (real-time video). In ambito medico, la velocità è secondaria rispetto all'accuratezza. Faster R-CNN è un "Two-Stage Detector", tecnicamente più appropriato per trovare piccole anomalie in immagini statiche ad alta risoluzione.
+
+2. IL RAG (Retrieval-Augmented Generation): DA MOCK A REALE
+
+Cosa ho fatto:
+Ho notato che il tuo rag.py era un placeholder (simulava la risposta). Ho implementato un RAG vero e proprio (rag_tool.py) utilizzando:
+- FAISS: Per il database vettoriale (Vector Store).
+- HuggingFace Embeddings: Per trasformare il testo in numeri (tutto in locale).
+- PyPDF: Per leggere documenti reali.
+
+Perché è meglio:
+- Semantica: Ora l'agente non "finge". Cerca davvero le risposte nei documenti PDF/TXT che mettiamo nella cartella knowledge_base.
+- Dinamicità: Se vogliamo aggiornare le cure, basta cambiare il file di testo senza toccare il codice.
+
+3. ARCHITETTURA OFFLINE & PRIVACY
+
+Cosa ho fatto:
+Ho rimosso la dipendenza dalle API esterne (Groq/OpenAI) rendendo il sistema autonomo.
+
+Perché è meglio:
+- Zero "Effetto Demo": Non rischiamo che la presentazione fallisca perché manca internet o scade la chiave API.
+- Privacy Medica: Possiamo dire al prof che "nessun dato lascia mai la macchina", un requisito fondamentale per software ospedalieri.
+
+4. INTERFACCIA WEB: DA STREAMLIT A FLASK (Custom)
+
+Cosa ho fatto:
+Invece di usare Streamlit (che avevi impostato tu), ho migrato l'interfaccia su una web app custom basata su Flask + HTML/JS.
+
+Perché è meglio per l'esame:
+- Controllo Totale: Streamlit è ottimo per prototipi veloci, ma è rigido nel layout. Con Flask ho potuto creare una dashboard "fianco a fianco" (Immagine a sinistra, Report a destra) senza scroll, migliorando l'usabilità per il medico. --> possiamo renderla ancora piu bella, basta cambiare index.html
+- Architettura Client-Server: Usare Flask dimostra una competenza architetturale superiore, separando nettamente il Backend (Python/Agenti) dal Frontend (HTML/JavaScript).
+- Rendering Dinamico: Ho potuto implementare un canvas custom in JavaScript per disegnare i Bounding Box direttamente nel browser, rendendo l'interazione più fluida rispetto al ricaricamento dell'immagine di Streamlit.
+
+COME ESEGUIRE LA NUOVA VERSIONE --> *guarda il branch nuovo-auri in cui ho fatto tutte le modifiche*
+
+Il progetto è dockerizzato e include tutte le nuove librerie (torch, faiss, langchain, flask).
+
+1. Costruisci l'immagine (necessario perché ho aggiunto librerie):
+
+cd docker
+docker build -t app_ind_ai:latest .
+
+2. Lancia il container mappando la porta 5000: (se non va fai cd..)
+
+docker run --rm -it -p 5000:5000 -v "${PWD}:/app" app_ind_ai:latest
+
+3. Avvia l'App:
+
+python3 web_app/app.py
+
+L'interfaccia è su http://localhost:5000.
+
+fammi sapere !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
