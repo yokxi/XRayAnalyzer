@@ -1,25 +1,12 @@
-# Definizioni Ufficiali Fleischner Society (Glossario)
+# PROTOCOLLO FLEISCHNER: ANALISI TEXTURE PARENCHIMALE
 
-## 1. Consolidamento (Consolidation) - Segno Forte di Polmonite
-**Definizione:** Aumento omogeneo dell'attenuazione del parenchima polmonare che **oscura** i margini dei vasi e delle pareti delle vie aeree.
+**SEZIONE 1: DISTINZIONE PATTERN (Analisi Crop)**
+1. **Check Visibilità Vascolare:**
+   - Riesci a distinguere i margini dei vasi sanguigni all'interno dell'area bianca?
+   - SE SI -> **TERMINE: Ground-Glass Opacity (GGO)**.
+   - SE NO (I vasi sono completamente coperti) -> **TERMINE: Consolidamento**.
+2. **Check Broncogramma Aereo:**
+   - Cerchi nel crop segni di linee aree ramificate (nere) nel contesto dell'addensamento?
+   - SE Presente -> Conferma natura patologica polmonare (Polmonite batterica).
 
-**Segno Chiave (Air Bronchogram):** Spesso è visibile il "Broncogramma Aereo" (tubi lucenti/neri pieni d'aria visibili all'interno dell'opacità bianca).
-
-### Istruzione Operativa per l'Agente
-Quando analizzi l'interno del box di YOLO:
-1.  Riesci a vedere i vasi sanguigni attraverso il bianco?
-    * NO (Vasi oscurati) -> Usa il termine **"Consolidamento"**. Alta probabilità di Polmonite Lobare.
-    * SÌ (Vasi visibili) -> Vedi sezione "Ground-Glass".
-
----
-
-## 2. Opacità a Vetro Smerigliato (Ground-Glass Opacity - GGO)
-**Definizione:** Aumento dell'opacità del polmone ("velatura") che **NON oscura** i vasi sanguigni polmonari sottostanti.
-
-**Significato Clinico:** Meno specifica del consolidamento. Può indicare infezione virale, edema o fibrosi, oltre a polmonite batterica iniziale.
-
-### Istruzione Operativa per l'Agente
-Se l'opacità rilevata da YOLO è tenue e lascia intravedere i vasi:
-1.  Riporta nel referto: **"Area di Ground-Glass Opacity"**.
-2.  Non usare il termine "Consolidamento franco".
-3.  Considera una confidenza diagnostica leggermente inferiore rispetto al consolidamento.
+**NOTE RIGOROSE:** Non usare "macchia" o "nuvola". Usa solo terminologia Fleischner ufficiale.

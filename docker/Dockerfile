@@ -1,10 +1,10 @@
-# 1. Partiamo da una base Ubuntu
+# 1. Base Ubuntu
 FROM ubuntu:noble
 
 # Evita prompt interattivi durante la build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 2. Installiamo i tool di base e Python 3.13
+# 2. Tool di base e Python 3.13
 RUN apt-get update && \
     apt-get install -y \
     software-properties-common \
@@ -19,35 +19,38 @@ RUN apt-get update && \
     && \
     add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
-    # 
-    apt-get install -y python3.13 python3.13-venv python3-pip
+    apt-get install -y python3.13 python3.13-venv python3-pip && \
+    rm -rf /var/lib/apt/lists/*
 
-# 3. Creiamo un virtual environment globale per il container
+# 3. Virtual environment globale per il container
 ENV VENV_PATH=/opt/venv
 RUN python3.13 -m venv $VENV_PATH
 
-# 4. AGGIUNGIAMO IL VENV AL PATH
-# I comandi 'python' e 'pip' useranno automaticamente questo venv, senza 'source activate'
+# 4. Aggiunta di VENV al PATH, i comandi 'python' e 'pip' useranno automaticamente questo venv
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-# 5. Prepariamo la cartella di lavoro e installiamo le dipendenze
+# 5. Preparazione della cartella di lavoro e installazione dipendenze
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# NUOVO STEP: Installazione specifica per PyTorch con CUDA 13.0
-# Questo usa l'indice di pacchetti specifico per la versione CUDA
-#DA COMMENTARE SE IL PROPRIO COMPUTER NON HA UNA GPU NVIDIA
-RUN pip install --no-cache-dir torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cu130
+# Se si specifica DEVICE=gpu durante la build, si installerà PyTorch con supporto CUDA
+# Se non viene specificato, si installerà la versione CPU
+ARG DEVICE=cpu
+RUN if [ "$DEVICE" = "gpu" ]; then \
+        echo "Installazione versione GPU (CUDA 13.0)..." && \
+        pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130; \
+    else \
+        echo "Installazione versione CPU..." && \
+        pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
+    fi
 
-# 6. Creiamo un utente 'dev' con lo stesso ID del tuo utente host
+# 6. Creazione un utente 'dev' con lo stesso ID dell'utente host
 ARG USER_ID=1000
 ARG USERNAME=dev
 
 # Controlla se l'ID utente (passato come ${USER_ID}) è già in uso.
-# Se sì, cancella l'utente esistente
-# prima di creare quello nuovo. Questo evita l'errore "UID not unique".
+# Se sì, cancella l'utente esistente prima di creare quello nuovo. Questo evita l'errore "UID not unique".
 RUN \
   ( \
     if getent passwd ${USER_ID} > /dev/null 2>&1; then \

@@ -1,24 +1,24 @@
-# Core & UI
+# --- CORE & UI ---
+streamlit
 pandas
 numpy
-streamlit
 python-dotenv
+tqdm
 
-# AI Orchestration (LangChain)
+# --- AGENTE e COMUNICAZIONE (OpenAI Standard per HPC) ---
+openai
 langchain
 langchain-community
 langchain-core
-langchain-text-splitters  # Per il MarkdownHeaderTextSplitter
+langchain-text-splitters
+langchain-openai
 
-# LLM
-langchain-groq
-
-# Computer Vision & YOLO
+# --- COMPUTER VISION & DEEP LEARNING ---
 ultralytics
-# IMPORTANTE: La versione headless per Docker per evitare errori "libGL.so"
 opencv-python-headless
+pillow
 
-# RAG
-chromadb                # Il Database Vettoriale
-langchain-chroma        # Il connettore ufficiale LangChain-Chroma
-fastembed               # Il modello di embedding
+# --- RAG (Database Vettoriale & Embedding) ---
+chromadb
+langchain-chroma
+fastembed
