@@ -53,3 +53,4 @@ pneumonia_project/temp/*
 
 # # ECCEZIONE: Vogliamo caricare SOLO il modello migliore (best.pt)
 # !best.pt
+/pneumonia_project/data/chromaDB_vector_db/*
