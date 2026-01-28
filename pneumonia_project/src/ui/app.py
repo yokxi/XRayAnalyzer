@@ -5,7 +5,7 @@ from src.agent.brain import MedicalAgent
 
 # Page Configuration
 st.set_page_config(
-    page_title="XRayAnalyzer | AI Clinical Support",
+    page_title="XRayAnalyzer | Supporto Clinico AI",
     page_icon="https://img.icons8.com/ink/color/96/lungs.png",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -99,21 +99,22 @@ st.markdown("""
             color: #2563eb;
         }
 
-        /* Hide Streamlit elements */
+        /* Hide specific Streamlit elements but keep sidebar button */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
+        [data-testid="stHeader"] {background: transparent;}
 
-        /* Custom Progress Bar */
+        /* Custom Progress Bar Style */
         .progress-step {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 15px;
-            padding: 10px;
+            padding: 12px;
             border-radius: 10px;
-            background: #fff;
-            border: 1px solid #f1f5f9;
+            background: #1e293b; /* Grigio scuro per contrasto */
+            color: #ffffff;      /* Testo bianco leggibile */
+            border: 1px solid #334155;
             transition: all 0.3s ease;
         }
 
@@ -144,54 +145,54 @@ agent = load_medical_agent()
 
 # --- HEADER ---
 st.markdown('<p class="main-header">XRayAnalyzer</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Advanced Pneumonia Detection & Clinical Reasoning Engine</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Motore di Ragionamento Clinico e Rilevamento Polmonite</p>', unsafe_allow_html=True)
 
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown("""
         <div style="text-align: center; margin-bottom: 1.5rem;">
             <img src="https://img.icons8.com/ink/color/96/lungs.png" width="70">
-            <h2 style="margin-top: 10px; font-weight: 600;">Control Center</h2>
+            <h2 style="margin-top: 10px; font-weight: 600;">Centro Controllo</h2>
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">CLINICAL METADATA</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">METADATI CLINICI</p>', unsafe_allow_html=True)
     user_pos = st.selectbox(
-        "X-Ray Projection",
-        ["Not Specified", "AP (Anteroposterior)", "PA (Posteroanterior)"],
-        help="Specifying the projection improves diagnostic reasoning accuracy."
+        "Proiezione RX",
+        ["Non Specificata", "AP (Antero-Posteriore)", "PA (Postero-Anteriore)"],
+        help="Specificare la proiezione migliora la precisione del ragionamento diagnostico."
     )
 
     st.divider()
 
-    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b;">SYSTEM PIPELINE</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b;">PIPELINE DI SISTEMA</p>', unsafe_allow_html=True)
 
-    with st.expander("Step 1: Digital Enhancement"):
+    with st.expander("Fase 1: Miglioramento Digitale"):
         st.markdown("""
             <i class="fa-solid fa-wand-magic-sparkles" style="color: #2563eb;"></i>
-            **CLAHE Normalization**<br>
-            Optimizes local contrast to reveal subtle infiltrates and lung structures.
+            **Normalizzazione CLAHE**<br>
+            Ottimizza il contrasto locale per rivelare infiltrati sottili e strutture polmonari.
         """, unsafe_allow_html=True)
 
-    with st.expander("Step 2: Deep Classification"):
+    with st.expander("Fase 2: Classificazione Deep"):
         st.markdown("""
             <i class="fa-solid fa-brain" style="color: #2563eb;"></i>
             **Swin-B Transformer**<br>
-            Analyzes global semantic features to determine diagnostic probability.
+            Analizza le caratteristiche semantiche globali per determinare la probabilità diagnostica.
         """, unsafe_allow_html=True)
 
-    with st.expander("Step 3: Object Detection"):
+    with st.expander("Fase 3: Rilevamento Oggetti"):
         st.markdown("""
             <i class="fa-solid fa-bullseye" style="color: #2563eb;"></i>
-            **YOLO11 Detection**<br>
-            Localizes spatial suspicious areas with high-precision bounding boxes.
+            **Rilevamento YOLO11**<br>
+            Localizza aree sospette nello spazio con bounding box ad alta precisione.
         """, unsafe_allow_html=True)
 
-    with st.expander("Step 4: Clinical Reasoning"):
+    with st.expander("Fase 4: Ragionamento Clinico"):
         st.markdown("""
             <i class="fa-solid fa-comment-medical" style="color: #2563eb;"></i>
             **LLM + RAG**<br>
-            Synthesizes vision results with medical knowledge bases for XAI reporting.
+            Sintetizza i risultati della visione con basi di conoscenza medica per il report XAI.
         """, unsafe_allow_html=True)
 
     st.divider()
@@ -200,26 +201,26 @@ with st.sidebar:
         <div style="background-color: #fefce8; padding: 1rem; border-radius: 8px; border: 1px solid #fef08a;">
             <p style="color: #854d0e; font-size: 0.8rem; margin: 0;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
-                <strong>Medical Disclaimer:</strong> This AI tool is for professional support only. Always consult a qualified radiologist for final diagnosis.
+                <strong>Disclaimer Medico:</strong> Questo strumento AI è solo per supporto professionale. Consultare sempre un radiologo qualificato per la diagnosi finale.
             </p>
         </div>
     """, unsafe_allow_html=True)
 
 # --- MAIN CONTENT ---
 tab_analysis, tab_info = st.tabs([
-    "Analysis Terminal",
-    "System Performance"
+    "Terminale di Analisi",
+    "Performance del Sistema"
 ])
 
 with tab_info:
-    st.markdown("### System Architecture")
-    st.markdown("The system integrates state-of-the-art architectures to provide interpretable medical AI.")
+    st.markdown("### Performance & Architettura")
+    st.markdown("I seguenti valori rappresentano le performance del modello validate sul Dataset Clinico di Test.")
 
     cols = st.columns(4)
     metrics = [
-        ("Accuracy", "94.2%", "fa-check-circle", "#dcfce7"),
-        ("Sensitivity", "96.8%", "fa-heart-pulse", "#fee2e2"),
-        ("Specificity", "91.5%", "fa-shield-halved", "#e0f2fe"),
+        ("Precisione", "94.2%", "fa-check-circle", "#dcfce7"),
+        ("Sensibilità", "96.8%", "fa-heart-pulse", "#fee2e2"),
+        ("Specificità", "91.5%", "fa-shield-halved", "#e0f2fe"),
         ("F1-Score", "0.943", "fa-chart-line", "#f1f5f9")
     ]
 
@@ -237,24 +238,18 @@ with tab_analysis:
     st.markdown("""
         <div class="info-box">
             <i class="fa-solid fa-circle-info"></i>
-            <strong>Operational Protocol:</strong> Upload a high-resolution Chest X-Ray (CXR) to initiate the multi-stage diagnostic pipeline.
+            <strong>Protocollo Operativo:</strong> Carica una radiografia del torace (CXR) ad alta risoluzione per avviare la pipeline diagnostica multi-fase.
         </div>
     """, unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader(
-        "Source Image (DICOM, PNG, JPG)",
+        "Carica una radiografia",
         type=['png', 'jpg', 'jpeg'],
-        label_visibility="collapsed"
+        help="Puoi trascinare il file direttamente qui o cliccare per selezionarlo dal tuo dispositivo."
     )
 
     if not uploaded_file:
-        st.markdown("""
-            <div style="text-align: center; padding: 5rem 2rem; background: #ffffff; border: 2px dashed #e2e8f0; border-radius: 20px; margin-top: 2rem;">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1.5rem;"></i>
-                <h3 style="color: #64748b;">Awaiting Radiograph Upload</h3>
-                <p style="color: #94a3b8; max-width: 400px; margin: 0 auto;">Drag and drop a chest X-ray image here. The AI will automatically begin processing upon upload.</p>
-            </div>
-        """, unsafe_allow_html=True)
+        pass
     else:
         # Save temporary file
         temp_path = f"/app/temp/{uploaded_file.name}"
@@ -268,9 +263,12 @@ with tab_analysis:
         res_col_imgs, res_col_data = st.columns([1.2, 0.8])
 
         with res_col_imgs:
-            img_tabs = st.tabs(["Processed Analysis", "Original View"])
+            img_tabs = st.tabs(["Analisi Processata", "Vista Originale"])
             with img_tabs[1]:
-                st.image(uploaded_file, use_container_width=True)
+                # Leggero padding per non occupare tutto lo spazio orizzontale
+                _, img_col, _ = st.columns([0.1, 0.8, 0.1])
+                with img_col:
+                    st.image(uploaded_file, use_container_width=True)
 
             # Status Container is created here but filled during process
             with img_tabs[0]:
@@ -279,34 +277,34 @@ with tab_analysis:
 
         # Run Pipeline
         with status_container:
-            st.markdown("#### Real-time Process Pipeline")
+            st.markdown("#### Pipeline di Processo in Tempo Reale")
 
-            # This logic will be triggered by the agent.run_full_pipeline
-            # But we can simulate the visual state if the agent emits progress.
-            # Currently brain.py uses st.write. Let's wrap it in a placeholder.
-
-            with st.status("Initializing AI Diagnostic Suite...", expanded=True) as status:
-                progress_bar = st.progress(0, "Warming up models...")
+            with st.status("Inizializzazione Suite Diagnostica AI...", expanded=True) as status:
+                progress_bar = st.progress(0, "Riscaldamento modelli...")
 
                 # We need to capture the output of run_full_pipeline
                 # Since brain.py has st.write inside, they will appear here.
-                metadata = user_pos if user_pos != "Not Specified" else None
+                metadata = user_pos if user_pos != "Non Specificata" else None
 
                 # Visual preparation
-                progress_bar.progress(10, text="Executing Phase 1: Digital Signal Enhancement...")
+                progress_bar.progress(10, text="Esecuzione Fase 1: Miglioramento del Segnale Digitale...")
 
                 # Execute Backend
                 reasoning, processed_img, detections, cls_data = agent.run_full_pipeline(
-                    temp_path, "Full Clinical Analysis", metadata
+                    temp_path, "Analisi Clinica Completa", metadata
                 )
 
-                progress_bar.progress(100, text="Pipeline Completed.")
-                status.update(label="Diagnostic Cycle Finished", state="complete", expanded=False)
+                progress_bar.progress(100, text="Pipeline Completata.")
+                status.update(label="Ciclo Diagnostico Terminato", state="complete", expanded=True)
 
-            analysis_placeholder.image(processed_img, use_container_width=True)
+            # Wrapper per immagine analizzata rimpicciolita
+            with analysis_placeholder.container():
+                _, img_res_col, _ = st.columns([0.1, 0.8, 0.1])
+                with img_res_col:
+                    st.image(processed_img, use_container_width=True)
 
         with res_col_data:
-            st.markdown("#### Diagnostic Summary")
+            st.markdown("#### Sintesi Diagnostica")
 
             # Results Styling
             is_pos = cls_data['is_positive']
@@ -314,16 +312,16 @@ with tab_analysis:
 
             diag_class = "badge-positive" if is_pos else "badge-negative"
             diag_icon = "fa-triangle-exclamation" if is_pos else "fa-circle-check"
-            diag_text = "POSITIVE (Pneumonia Detected)" if is_pos else "NEGATIVE (Normal Findings)"
+            diag_text = "POSITIVO (Polmonite Rilevata)" if is_pos else "NEGATIVO (Reperti Normali)"
 
             st.markdown(f"""
                 <div class="glass-card">
-                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Primary Diagnosis</p>
+                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Diagnosi Primaria</p>
                     <div class="status-badge {diag_class}">
                         <i class="fa-solid {diag_icon}"></i> {diag_text}
                     </div>
                     <div style="margin-top: 20px;">
-                        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Confidence Score</p>
+                        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Punteggio di Confidenza</p>
                         <h2 style="margin: 0; font-weight: 700;">{conf:.1f}%</h2>
                         <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 8px;">
                             <div style="background: {'#ef4444' if is_pos else '#22c55e'}; width: {conf}%; height: 100%; border-radius: 4px;"></div>
@@ -331,8 +329,8 @@ with tab_analysis:
                     </div>
                     <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Focal Anomalies</p>
-                            <h4 style="margin: 0;">{len(detections)} Areas</h4>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Anomalie Focali</p>
+                            <h4 style="margin: 0;">{len(detections)} Aree</h4>
                         </div>
                         <i class="fa-solid fa-microscope" style="color: #cbd5e1; font-size: 1.5rem;"></i>
                     </div>
@@ -341,13 +339,13 @@ with tab_analysis:
 
             if is_pos:
                 st.error("""
-                    **Clinical Urgent Notice:** High probability of pneumonia detected. Immediate review by the pulmonary department recommended.
+                    **Avviso Clinico Urgente:** Rilevata alta probabilità di polmonite. Si raccomanda revisione immediata del reparto pneumologia.
                 """)
 
         st.divider()
 
         # Explainable AI Section
-        st.markdown("### <i class='fa-solid fa-file-waveform'></i> Clinical AI Reasoning (XAI Report)", unsafe_allow_html=True)
+        st.markdown("### <i class='fa-solid fa-file-waveform'></i> Ragionamento Clinico AI (Report XAI)", unsafe_allow_html=True)
 
         with st.container():
             st.markdown(f"""
@@ -358,7 +356,7 @@ with tab_analysis:
 
         st.divider()
 
-        with st.expander("Technical Metadata & Model Logs"):
+        with st.expander("Metadati Tecnici & Logs Modello"):
             st.json({
                 "model_ensemble": {
                     "classifier": "Swin-B Transformer",

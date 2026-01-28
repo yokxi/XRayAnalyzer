@@ -41,35 +41,38 @@ class MedicalAgent:
         return response.choices[0].message.content
 
     def _update_status(self, text, icon="fa-spinner fa-spin"):
+        """Aggiorna lo stato visivo e invia una notifica toast."""
+        st.toast(text, icon="🩺")
         st.markdown(f"""
             <div class="progress-step active">
                 <div class="step-icon"><i class="fa-solid {icon}"></i></div>
-                <div style="font-size: 0.9rem; font-weight: 600;">{text}</div>
+                <div style="font-size: 0.9rem; font-weight: 600; color: #ffffff;">{text}</div>
             </div>
         """, unsafe_allow_html=True)
 
     def run_full_pipeline(self, image_path, user_query, user_metadata=None):
         # 1. Vision Analysis (Swin-B + YOLO)
-        self._update_status("Running Vision Ensemble (Swin-B + YOLO11)...", "fa-eye")
+        self._update_status("Esecuzione Vision Ensemble (Swin-B + YOLO11)...", "fa-eye")
         cls_data, detections, clahe_img = self.vision.analyze(image_path)
 
         full_reasoning = ""
 
         # --- STEP 1: TECHNICAL ANALYSIS ---
-        self._update_status("Synthesizing Static Context (Projection & Alignment)...", "fa-gears")
+        self._update_status("Sintesi del Contesto Statico (Proiezione e Allineamento)...", "fa-gears")
         rag_tech = self.rag.search("protocollo riconoscimento proiezione AP PA", k=2)
         tech_prompt = f"""
         Analyze this full chest radiograph.
         1. Determine if the projection is AP or PA based on standard medical protocols: {rag_tech}.
         2. Note: User declared: {user_metadata if user_metadata else 'No specific metadata provided'}.
         3. Evaluate image quality, inspiration, and centering.
+        IMPORTANT: Please provide the analysis in ITALIAN.
         """
         tech_analysis = self.call_hpc(tech_prompt, clahe_img)
-        full_reasoning += f"### 1. Technical Analysis & Positioning\n{tech_analysis}\n\n"
+        full_reasoning += f"### 1. Analisi Tecnica e Posizionamento\n{tech_analysis}\n\n"
 
         # --- STEP 2: ARBITRATED ANALYSIS ---
         if len(detections) > 0:
-            self._update_status(f"Validating {len(detections)} suspected focal areas...", "fa-target-sharp")
+            self._update_status(f"Validazione di {len(detections)} aree focali sospette...", "fa-target-sharp")
             for i, det in enumerate(detections):
                 rag_context = self.rag.search(f"validazione {det['location_text']} {det['diagnosis']}", k=3)
 
@@ -84,19 +87,20 @@ class MedicalAgent:
 
                 {arbitrator_note}
                 Describe the texture (reticular, nodular, etc.) and confirm if it is pathological opacity or an artifact.
+                IMPORTANT: Please provide the analysis in ITALIAN.
                 """
 
                 det_analysis = self.call_hpc(det_prompt, det['image_crop'])
-                full_reasoning += f"### 2.{i+1} Focal Area Analysis: {det['location_text']}\n{det_analysis}\n\n"
+                full_reasoning += f"### 2.{i+1} Analisi Area Focale: {det['location_text']}\n{det_analysis}\n\n"
         else:
             # Case where Swin-B is positive but YOLO found no boxes
             if cls_data['is_positive']:
-                self._update_status("Searching for diffuse opacities (Ground-Glass Patterns)...", "fa-magnifying-glass-plus")
-                diffuse_prompt = "Global classifier predicts positive for pneumonia, but no focal boxes were found. Look for signs of diffuse veiling, interstitial patterns, or ground-glass opacities."
+                self._update_status("Ricerca di opacità diffuse (Pattern a Vetro Smerigliato)...", "fa-magnifying-glass-plus")
+                diffuse_prompt = "Global classifier predicts positive for pneumonia, but no focal boxes were found. Look for signs of diffuse veiling, interstitial patterns, or ground-glass opacities. IMPORTANT: Please provide the analysis in ITALIAN."
                 diffuse_analysis = self.call_hpc(diffuse_prompt, clahe_img)
-                full_reasoning += f"### 2. Diffuse Opacity Analysis\n{diffuse_analysis}\n"
+                full_reasoning += f"### 2. Analisi Opacità Diffusa\n{diffuse_analysis}\n"
             else:
-                self._update_status("Finalizing negative findings report...", "fa-file-shield")
-                full_reasoning += "### 2. Pathological Analysis\nNo focal or global anomalies detected by vision models. Findings are consistent with a normal exam."
+                self._update_status("Finalizzazione del report dei reperti negativi...", "fa-file-shield")
+                full_reasoning += "### 2. Analisi Patologica\nNessuna anomalia focale o globale rilevata dai modelli di visione. I risultati sono coerenti con un esame normale."
 
         return full_reasoning, clahe_img, detections, cls_data
