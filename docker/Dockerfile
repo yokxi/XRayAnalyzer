@@ -4,7 +4,7 @@ FROM ubuntu:noble
 # Evita prompt interattivi durante la build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 2. Tool di base e Python 3.13
+# 2. Tool di base e Python 3.12 (nativo in Ubuntu Noble)
 RUN apt-get update && \
     apt-get install -y \
     software-properties-common \
@@ -16,15 +16,15 @@ RUN apt-get update && \
     nano \
     libgl1 \
     libglib2.0-0 \
+    python3.12 \
+    python3.12-venv \
+    python3-pip \
     && \
-    add-apt-repository -y ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y python3.13 python3.13-venv python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
 # 3. Virtual environment globale per il container
 ENV VENV_PATH=/opt/venv
-RUN python3.13 -m venv $VENV_PATH
+RUN python3.12 -m venv $VENV_PATH
 
 # 4. Aggiunta di VENV al PATH, i comandi 'python' e 'pip' useranno automaticamente questo venv
 ENV PATH="$VENV_PATH/bin:$PATH"

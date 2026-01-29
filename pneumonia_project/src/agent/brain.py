@@ -19,7 +19,7 @@ class MedicalAgent:
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def call_hpc(self, prompt, pil_img):
-        """Helper per singola chiamata multimodale all'HPC"""
+        """Helper for single multimodal call to HPC"""
         base64_img = self.encode_image(pil_img)
         response = self.client.chat.completions.create(
             model=self.model_name,
@@ -43,17 +43,18 @@ class MedicalAgent:
     def run_full_pipeline(self, image_path, user_query, user_metadata=None):
         # 1. Vision Analysis (Swin-B + YOLO)
         cls_data, detections, clahe_img = self.vision.analyze(image_path)
-        
+
         full_reasoning = ""
-        
+
         # --- STEP 1: ANALISI TECNICA (Immagine Intera) ---
         st.write("--- 🔍 Fase 1: Analisi Tecnica Globale ---")
         rag_tech = self.rag.search("protocollo riconoscimento proiezione AP PA", k=2)
         tech_prompt = f"""
-        Analizza questa radiografia intera. 
-        1. Determina se la proiezione è AP o PA basandoti sui protocolli: {rag_tech}.
-        2. Nota: L'utente ha dichiarato: {user_metadata if user_metadata else 'Nessuna specifica'}.
-        3. Valuta la qualità dell'immagine e l'ispirazione.
+        Analyze this full chest radiograph.
+        1. Determine if the projection is AP or PA based on standard medical protocols: {rag_tech}.
+        2. Note: User declared: {user_metadata if user_metadata else 'No specific metadata provided'}.
+        3. Evaluate image quality, inspiration, and centering.
+        IMPORTANT: Please provide the analysis in ITALIAN.
         """
         tech_analysis = self.call_hpc(tech_prompt, clahe_img)
         full_reasoning += f"### 1. Analisi Tecnica e Posizionamento\n{tech_analysis}\n\n"
@@ -63,27 +64,28 @@ class MedicalAgent:
             st.write(f"--- 🎯 Fase 2: Validazione di {len(detections)} rilevamenti ---")
             for i, det in enumerate(detections):
                 rag_context = self.rag.search(f"validazione {det['location_text']} {det['diagnosis']}", k=3)
-                
+
                 arbitrator_note = ""
                 if not cls_data['is_positive']:
-                    arbitrator_note = "ALERT: Il classificatore globale è negativo. Verifica con sospetto di ARTEFATTO."
-                
+                    arbitrator_note = "CRITICAL ALERT: Global classifier is NEGATIVE. Verify if this area is an ARTIFACT (e.g., bone structure, device)."
+
                 det_prompt = f"""
-                Analizza questo dettaglio (CROP) dell'area: {det['location_text']}.
-                Protocollo RAG da seguire:
+                Analyze this CROP of the suspected area: {det['location_text']}.
+                Follow this RAG validation protocol:
                 {rag_context}
-                
+
                 {arbitrator_note}
-                Descrivi la texture e conferma se si tratta di opacità patologica o artefatto.
+                Describe the texture (reticular, nodular, etc.) and confirm if it is pathological opacity or an artifact.
+                IMPORTANT: Please provide the analysis in ITALIAN.
                 """
-                
+
                 det_analysis = self.call_hpc(det_prompt, det['image_crop'])
                 full_reasoning += f"### 2.{i+1} Analisi Area: {det['location_text']}\n{det_analysis}\n\n"
         else:
             # Caso in cui Swin-B è positivo ma YOLO non trova box
             if cls_data['is_positive']:
+                diffuse_prompt = "Global classifier predicts positive for pneumonia, but no focal boxes were found. Look for signs of diffuse veiling, interstitial patterns, or ground-glass opacities. IMPORTANT: Please provide the analysis in ITALIAN."
                 st.write("--- 🧠 Fase 2: Ricerca opacità diffusa ---")
-                diffuse_prompt = "Il classificatore globale segnala opacità, ma non ci sono box focali. Cerca segni di velatura diffusa o vetro smerigliato."
                 diffuse_analysis = self.call_hpc(diffuse_prompt, clahe_img)
                 full_reasoning += f"### 2. Analisi Opacità Diffusa\n{diffuse_analysis}\n"
             else:
