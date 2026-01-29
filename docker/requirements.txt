@@ -22,3 +22,6 @@ pillow
 chromadb
 langchain-chroma
 fastembed
+
+# --- PDF Generation ---
+fpdf2

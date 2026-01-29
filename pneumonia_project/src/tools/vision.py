@@ -92,8 +92,14 @@ class VisionTool:
         
         # --- STAGE 2: DETECTION (YOLO lavora comunque, l'agente con le informazioni che ha deciderà la "diagnosi" finale) ---
         detections = []
+        yolo_annotated_img = None
         if self.yolo_model:
             results = self.yolo_model.predict(source=clahe_img, imgsz=1024, conf=0.25, verbose=False)
+
+            # Get annotated image with bounding boxes
+            annotated_np = results[0].plot()  # Returns numpy array with boxes drawn
+            yolo_annotated_img = Image.fromarray(cv2.cvtColor(annotated_np, cv2.COLOR_BGR2RGB))
+
             for box in results[0].boxes:
                 coords = box.xyxy[0].tolist()
                 crop = clahe_img.crop((coords[0], coords[1], coords[2], coords[3]))
@@ -104,5 +110,8 @@ class VisionTool:
                     "image_crop": crop,
                     "coords": coords
                 })
-        
-        return classifier_data, detections, clahe_img
+        else:
+            # If no YOLO model, use CLAHE image as fallback
+            yolo_annotated_img = clahe_img
+
+        return classifier_data, detections, clahe_img, yolo_annotated_img

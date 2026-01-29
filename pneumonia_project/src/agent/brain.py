@@ -40,14 +40,54 @@ class MedicalAgent:
         )
         return response.choices[0].message.content
 
-    def run_full_pipeline(self, image_path, user_query, user_metadata=None):
+    def run_full_pipeline_streaming(self, image_path, user_query, user_metadata=None):
+        """
+        Generator that yields each reasoning step as it completes.
+        Yields: (step_data, is_final, final_data)
+        - step_data: the current step dict
+        - is_final: True if this is the last yield with complete results
+        - final_data: (reasoning_data, clahe_img, yolo_img, detections, cls_data) only on final yield
+        """
         # 1. Vision Analysis (Swin-B + YOLO)
-        cls_data, detections, clahe_img = self.vision.analyze(image_path)
+        cls_data, detections, clahe_img, yolo_img = self.vision.analyze(image_path)
 
+        reasoning_steps = []
         full_reasoning = ""
 
+        # Build detailed vision analysis content
+        diagnosis_status = "POSITIVA" if cls_data['is_positive'] else "NEGATIVA"
+        confidence_pct = cls_data['confidence'] * 100
+
+        vision_content = f"""**Classificazione Globale (Swin-B Transformer):**
+- Predizione: **{diagnosis_status}** per polmonite
+- Confidenza del modello: **{confidence_pct:.1f}%**
+
+**Rilevamento Anomalie (YOLO11):**
+- Aree sospette identificate: **{len(detections)}**
+"""
+        if len(detections) > 0:
+            vision_content += "\n**Localizzazioni rilevate:**\n"
+            for i, det in enumerate(detections):
+                vision_content += f"- Area {i+1}: {det['location_text']} (confidenza: {det['confidence']*100:.1f}%)\n"
+        else:
+            if cls_data['is_positive']:
+                vision_content += "\n*Nessuna area focale rilevata, ma il classificatore suggerisce possibile opacita diffusa.*"
+            else:
+                vision_content += "\n*Nessuna anomalia focale rilevata. Immagine compatibile con reperti normali.*"
+
+        vision_content += f"\n\n**Pre-processing applicato:** CLAHE (Contrast Limited Adaptive Histogram Equalization) per ottimizzare la visibilita delle strutture polmonari."
+
+        # Yield initial vision results
+        yield {
+            "id": "vision_init",
+            "title": "Elaborazione Visiva",
+            "icon": "fa-eye",
+            "content": vision_content,
+            "image": None,
+            "status": "complete"
+        }, False, (None, clahe_img, yolo_img, detections, cls_data)
+
         # --- STEP 1: ANALISI TECNICA (Immagine Intera) ---
-        st.write("--- 🔍 Fase 1: Analisi Tecnica Globale ---")
         rag_tech = self.rag.search("protocollo riconoscimento proiezione AP PA", k=2)
         tech_prompt = f"""
         Analyze this full chest radiograph.
@@ -57,11 +97,20 @@ class MedicalAgent:
         IMPORTANT: Please provide the analysis in ITALIAN.
         """
         tech_analysis = self.call_hpc(tech_prompt, clahe_img)
+
+        step = {
+            "id": "tech_analysis",
+            "title": "Analisi Tecnica e Posizionamento",
+            "icon": "fa-microscope",
+            "content": tech_analysis,
+            "image": None
+        }
+        reasoning_steps.append(step)
         full_reasoning += f"### 1. Analisi Tecnica e Posizionamento\n{tech_analysis}\n\n"
+        yield step, False, None
 
         # --- STEP 2: ANALISI ARBITRATA (Per ogni box YOLO) ---
         if len(detections) > 0:
-            st.write(f"--- 🎯 Fase 2: Validazione di {len(detections)} rilevamenti ---")
             for i, det in enumerate(detections):
                 rag_context = self.rag.search(f"validazione {det['location_text']} {det['diagnosis']}", k=3)
 
@@ -80,15 +129,55 @@ class MedicalAgent:
                 """
 
                 det_analysis = self.call_hpc(det_prompt, det['image_crop'])
+
+                step = {
+                    "id": f"detection_{i+1}",
+                    "title": f"Analisi Area: {det['location_text']}",
+                    "icon": "fa-bullseye",
+                    "content": det_analysis,
+                    "image": det['image_crop']
+                }
+                reasoning_steps.append(step)
                 full_reasoning += f"### 2.{i+1} Analisi Area: {det['location_text']}\n{det_analysis}\n\n"
+                yield step, False, None
         else:
-            # Caso in cui Swin-B è positivo ma YOLO non trova box
             if cls_data['is_positive']:
                 diffuse_prompt = "Global classifier predicts positive for pneumonia, but no focal boxes were found. Look for signs of diffuse veiling, interstitial patterns, or ground-glass opacities. IMPORTANT: Please provide the analysis in ITALIAN."
-                st.write("--- 🧠 Fase 2: Ricerca opacità diffusa ---")
                 diffuse_analysis = self.call_hpc(diffuse_prompt, clahe_img)
-                full_reasoning += f"### 2. Analisi Opacità Diffusa\n{diffuse_analysis}\n"
-            else:
-                full_reasoning += "### 2. Analisi Patologica\nNessuna anomalia focale o globale rilevata dai modelli di visione."
 
-        return full_reasoning, clahe_img, detections, cls_data
+                step = {
+                    "id": "diffuse_analysis",
+                    "title": "Analisi Opacita Diffusa",
+                    "icon": "fa-cloud",
+                    "content": diffuse_analysis,
+                    "image": None
+                }
+                reasoning_steps.append(step)
+                full_reasoning += f"### 2. Analisi Opacita Diffusa\n{diffuse_analysis}\n"
+                yield step, False, None
+            else:
+                step = {
+                    "id": "no_findings",
+                    "title": "Analisi Patologica",
+                    "icon": "fa-check-circle",
+                    "content": "Nessuna anomalia focale o globale rilevata dai modelli di visione.",
+                    "image": None
+                }
+                reasoning_steps.append(step)
+                full_reasoning += "### 2. Analisi Patologica\nNessuna anomalia focale o globale rilevata dai modelli di visione."
+                yield step, False, None
+
+        # Final yield with complete data
+        reasoning_data = {
+            "steps": reasoning_steps,
+            "full_markdown": full_reasoning
+        }
+        yield None, True, (reasoning_data, clahe_img, yolo_img, detections, cls_data)
+
+    def run_full_pipeline(self, image_path, user_query, user_metadata=None):
+        """Non-streaming version for backward compatibility."""
+        result = None
+        for step, is_final, final_data in self.run_full_pipeline_streaming(image_path, user_query, user_metadata):
+            if is_final:
+                result = final_data
+        return result

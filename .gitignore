@@ -30,6 +30,7 @@ docker/.env
 # Ignora lo zip originale e la cartella del dataset estratto
 archive.zip
 pneumonia_project/temp/*
+pneumonia_project/archive/*
 
 # # ======================================
 # # 5. OUTPUT E LOG HPC (Dalla tua foto)
