@@ -40,25 +40,14 @@ class MedicalAgent:
         )
         return response.choices[0].message.content
 
-    def _update_status(self, text, icon="fa-spinner fa-spin"):
-        """Aggiorna lo stato visivo e invia una notifica toast."""
-        st.toast(text, icon="🩺")
-        st.markdown(f"""
-            <div class="progress-step active">
-                <div class="step-icon"><i class="fa-solid {icon}"></i></div>
-                <div style="font-size: 0.9rem; font-weight: 600; color: #ffffff;">{text}</div>
-            </div>
-        """, unsafe_allow_html=True)
-
     def run_full_pipeline(self, image_path, user_query, user_metadata=None):
         # 1. Vision Analysis (Swin-B + YOLO)
-        self._update_status("Esecuzione Vision Ensemble (Swin-B + YOLO11)...", "fa-eye")
         cls_data, detections, clahe_img = self.vision.analyze(image_path)
 
         full_reasoning = ""
 
-        # --- STEP 1: TECHNICAL ANALYSIS ---
-        self._update_status("Sintesi del Contesto Statico (Proiezione e Allineamento)...", "fa-gears")
+        # --- STEP 1: ANALISI TECNICA (Immagine Intera) ---
+        st.write("--- 🔍 Fase 1: Analisi Tecnica Globale ---")
         rag_tech = self.rag.search("protocollo riconoscimento proiezione AP PA", k=2)
         tech_prompt = f"""
         Analyze this full chest radiograph.
@@ -70,9 +59,9 @@ class MedicalAgent:
         tech_analysis = self.call_hpc(tech_prompt, clahe_img)
         full_reasoning += f"### 1. Analisi Tecnica e Posizionamento\n{tech_analysis}\n\n"
 
-        # --- STEP 2: ARBITRATED ANALYSIS ---
+        # --- STEP 2: ANALISI ARBITRATA (Per ogni box YOLO) ---
         if len(detections) > 0:
-            self._update_status(f"Validazione di {len(detections)} aree focali sospette...", "fa-target-sharp")
+            st.write(f"--- 🎯 Fase 2: Validazione di {len(detections)} rilevamenti ---")
             for i, det in enumerate(detections):
                 rag_context = self.rag.search(f"validazione {det['location_text']} {det['diagnosis']}", k=3)
 
@@ -91,16 +80,15 @@ class MedicalAgent:
                 """
 
                 det_analysis = self.call_hpc(det_prompt, det['image_crop'])
-                full_reasoning += f"### 2.{i+1} Analisi Area Focale: {det['location_text']}\n{det_analysis}\n\n"
+                full_reasoning += f"### 2.{i+1} Analisi Area: {det['location_text']}\n{det_analysis}\n\n"
         else:
-            # Case where Swin-B is positive but YOLO found no boxes
+            # Caso in cui Swin-B è positivo ma YOLO non trova box
             if cls_data['is_positive']:
-                self._update_status("Ricerca di opacità diffuse (Pattern a Vetro Smerigliato)...", "fa-magnifying-glass-plus")
                 diffuse_prompt = "Global classifier predicts positive for pneumonia, but no focal boxes were found. Look for signs of diffuse veiling, interstitial patterns, or ground-glass opacities. IMPORTANT: Please provide the analysis in ITALIAN."
+                st.write("--- 🧠 Fase 2: Ricerca opacità diffusa ---")
                 diffuse_analysis = self.call_hpc(diffuse_prompt, clahe_img)
                 full_reasoning += f"### 2. Analisi Opacità Diffusa\n{diffuse_analysis}\n"
             else:
-                self._update_status("Finalizzazione del report dei reperti negativi...", "fa-file-shield")
-                full_reasoning += "### 2. Analisi Patologica\nNessuna anomalia focale o globale rilevata dai modelli di visione. I risultati sono coerenti con un esame normale."
+                full_reasoning += "### 2. Analisi Patologica\nNessuna anomalia focale o globale rilevata dai modelli di visione."
 
         return full_reasoning, clahe_img, detections, cls_data

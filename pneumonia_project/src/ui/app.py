@@ -218,17 +218,16 @@ with tab_info:
 
     cols = st.columns(4)
     metrics = [
-        ("Precisione", "94.2%", "fa-check-circle", "#dcfce7"),
-        ("Sensibilità", "96.8%", "fa-heart-pulse", "#fee2e2"),
-        ("Specificità", "91.5%", "fa-shield-halved", "#e0f2fe"),
-        ("F1-Score", "0.943", "fa-chart-line", "#f1f5f9")
+        ("Leopoldo", "90%", "fa-check-circle", "#dcfce7", "#166534"),
+        ("Aurora", "9%", "fa-heart-pulse", "#fee2e2", "#991b1b"),
+        ("Martin", "1%", "fa-shield-halved", "#e0f2fe", "#075985"),
     ]
 
-    for i, (label, val, icon, bg) in enumerate(metrics):
+    for i, (label, val, icon, bg, icon_color) in enumerate(metrics):
         with cols[i]:
             st.markdown(f"""
-                <div style="background: {bg}; padding: 1.5rem; border-radius: 12px; text-align: center;">
-                    <i class="fa-solid {icon}" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+                <div style="background: {bg}; padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <i class="fa-solid {icon}" style="font-size: 1.5rem; margin-bottom: 10px; color: {icon_color}; display: block;"></i>
                     <p style="margin: 0; font-size: 0.8rem; color: #475569;">{label}</p>
                     <h3 style="margin: 0; color: #1e293b;">{val}</h3>
                 </div>
@@ -315,7 +314,7 @@ with tab_analysis:
             diag_text = "POSITIVO (Polmonite Rilevata)" if is_pos else "NEGATIVO (Reperti Normali)"
 
             st.markdown(f"""
-                <div class="glass-card">
+                <div class="">
                     <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Diagnosi Primaria</p>
                     <div class="status-badge {diag_class}">
                         <i class="fa-solid {diag_icon}"></i> {diag_text}
@@ -349,7 +348,7 @@ with tab_analysis:
 
         with st.container():
             st.markdown(f"""
-                <div style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; line-height: 1.6;">
+                <div style="background: #ffffff; padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; line-height: 1.6; color: #1e293b;">
                     {reasoning}
                 </div>
             """, unsafe_allow_html=True)
