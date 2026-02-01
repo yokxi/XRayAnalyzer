@@ -24,3 +24,6 @@ VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "/app/data/chromaDB_vector_db")
 # --- UTILITY ---
 TEMP_DIR = os.getenv("TEMP_DIR", "/app/temp")
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+# --- PERFORMANCE ---
+USE_TTA = os.getenv("USE_TTA", "False").lower() == "true"
