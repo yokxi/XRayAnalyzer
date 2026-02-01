@@ -7,9 +7,12 @@ load_dotenv()
 HPC_ENDPOINT = os.getenv("HPC_ENDPOINT", "http://host.docker.internal:8000/v1")
 HPC_MODEL_NAME = os.getenv("HPC_MODEL_NAME", "qwen-vl")
 
-# --- MODELLO DI VISIONE ---
-YOLO_MODEL_PATH = os.getenv("YOLO_MODEL_PATH", "/app/models/yolo11/best_clahe.pt")
+# --- MODELLI DI VISIONE ---
+YOLO10_MODEL_PATH = os.getenv("YOLO10_MODEL_PATH", "/app/models/yolo11/best_yolo10_clahe.pt")
+YOLO11_MODEL_PATH = os.getenv("YOLO11_MODEL_PATH", "/app/models/yolo11/best_clahe.pt")
+
 # --- CLASSIFICATORE ---
+
 CLASSIFIER_MODEL_PATH = os.getenv("CLASSIFIER_MODEL_PATH", "/app/models/swinB_classifier/swinB_classifier.pth")
 
 # --- RAG KNOWLEDGE BASE ---

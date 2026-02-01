@@ -25,3 +25,6 @@ fastembed
 
 # --- PDF Generation ---
 fpdf2
+
+# --- OBJECT DETECTION UTILITIES ---
+ensemble-boxes
