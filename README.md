@@ -14,35 +14,57 @@ Il progetto è interamente containerizzato tramite Docker per garantire la ripro
 
 ### 1. Build dell'Immagine
 
-Per costruire l'immagine Docker contenente tutte le dipendenze necessarie, eseguire lo script di build dalla cartella *docker/* del progetto:
+Per costruire l'immagine Docker è necessario utilizzare lo script `build.sh` presente nella cartella `docker/`. Lo script supporta due modalità: **CPU** (default) e **GPU**.
+
+#### Esecuzione Standard (CPU / Mac Apple Silicon)
+Se non si dispone di una scheda video NVIDIA, eseguire semplicemente lo script. Questo installerà la versione di PyTorch ottimizzata per CPU.
 
 ```bash
+cd docker
 ./build.sh
 ```
 
-#### ⚠️ Nota per architetture non-NVIDIA (CPU-only / Apple Silicon)
-Il Dockerfile è configurato di default per installare le versioni di PyTorch ottimizzate per CUDA 13.0 (GPU NVIDIA). Se si intende eseguire il container su una macchina priva di GPU NVIDIA compatibile è necessario modificare il Dockerfile prima di avviare il build:
-1) Aprire il file Dockerfile.
-2) Individuare il comando RUN pip install ... relativo all'installazione di torch.
-3) Sostituirlo con il comando appropriato per la propria architettura (es. CPU-only), consultando la [documentazione ufficiale di PyTorch](https://pytorch.org/get-started/locally/).
+#### Esecuzione con Supporto GPU (NVIDIA CUDA)
+Se si intende utilizzare l'accelerazione hardware su scheda video NVIDIA, passare l'argomento `gpu`. Questo configurerà il container con i driver CUDA 13.0 e PyTorch compatibile.
 
+```bash
+cd docker
+./build.sh gpu
+```
 
 ### 2. Utilizzo del container
-È necessario predisporre una cartella di lavoro (es. src/ o workspace/) all'interno della directory del progetto. Questa cartella verrà passata come argomento allo script di avvio e verrà mappata direttamente nella directory /app all'interno del container. Qualsiasi file salvato in /app dal container sarà immediatamente disponibile nella cartella host specificata.
 
-L'avvio del container è gestito dallo script **run.sh**, che accetta due argomenti posizionali:
+L'avvio del container avviene tramite lo script `run.sh`, che monta la cartella del codice sorgente all'interno del container. Il container mappa la cartella fornita su `/app`.
 
-1) **Path della cartella sorgente (Obbligatorio)**: Il percorso relativo alla cartella di lavoro sull'host.
-2) **Flag GPU (Opzionale)**: La stringa gpu per abilitare l'accelerazione hardware.
+**Nota:** Gli esempi seguenti assumono di trovarsi all'interno della cartella `docker/` dove risiede lo script. Poiché il codice del progetto si trova nella cartella `pneumonia_project`, useremo il percorso relativo `../pneumonia_project`.
 
 #### Esecuzione Standard (CPU)
 ```bash
-# Sintassi: ./run.sh <cartella_sorgente>
-./run.sh /src
+# Sintassi: ./run.sh <percorso_cartella_progetto>
+./run.sh ../pneumonia_project
 ```
 
 #### Esecuzione con Accelerazione GPU
+Richiede di aver eseguito il build con l'opzione `gpu`.
 ```bash
-# Sintassi: ./run.sh <cartella_sorgente> gpu
-./run.sh ./src gpu
+# Sintassi: ./run.sh <percorso_cartella_progetto> gpu
+./run.sh ../pneumonia_project gpu
 ```
+
+---
+
+## 🚀 Lancio dell'Applicazione
+
+Una volta avviato il container, vi troverete nella shell interna. Per lanciare l'interfaccia grafica Web (Streamlit), seguire questi passaggi:
+
+1.  Spostarsi nella cartella dell'interfaccia utente:
+    ```bash
+    cd /app/src/ui
+    ```
+
+2.  Lanciare l'applicazione:
+    ```bash
+    streamlit run app.py
+    ```
+
+L'applicazione sarà accessibile dal browser all'indirizzo indicato nel terminale (solitamente `http://localhost:8501`).
