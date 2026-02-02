@@ -140,10 +140,10 @@ def show_save_archive_dialog(results, user_pos):
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Annulla", width="stretch"):
+        if st.button("Annulla", width="stretch", icon=":material/close:"):
             st.rerun()
     with col2:
-        if st.button("Conferma Salvataggio", type="primary", width="stretch"):
+        if st.button("Salva", type="primary", width="stretch", icon=":material/save:"):
             with st.spinner("Salvataggio in corso..."):
                 # Prepare data
                 image_hash = compute_image_hash(results['original_img'])
@@ -161,9 +161,9 @@ def show_save_archive_dialog(results, user_pos):
                     image_hash=image_hash
                 )
 
-                # Update session state to show "Archiviato ✅"
+                # Update session state to show "Archiviato"
                 st.session_state.current_analysis_saved = True
-                st.toast(f"Analisi '{custom_name}' salvata!", icon="✅")
+                st.toast(f"Analisi '{custom_name}' salvata!", icon=":material/check_circle:")
                 st.rerun()
 
 # --- SIDEBAR ---
@@ -237,7 +237,9 @@ if nav_page == "Terminale Analisi":
     if not uploaded_file:
         st.markdown("""
             <div style="text-align: center; padding: 4rem 2rem;">
-                <img src="https://img.icons8.com/ink/color/96/lungs.png" width="100" style="opacity: 0.5; filter: grayscale(100%); margin-bottom: 20px;">
+                <div style="font-size: 5rem; color: #94a3b8; opacity: 0.5; margin-bottom: 20px;">
+                    <i class="fa-solid fa-lungs"></i>
+                </div>
                 <h2 style="color: #94a3b8;">Nessuna Radiografia Caricata</h2>
                 <p style="color: #64748b; margin-top: 10px;">Caricare un'immagine RX per avviare l'analisi.</p>
             </div>
@@ -319,38 +321,51 @@ if nav_page == "Terminale Analisi":
         res_col_imgs, res_col_data = st.columns([1.2, 0.8])
 
         with res_col_imgs:
-            # Action Buttons
-            btn_col1, btn_col2, btn_col3 = st.columns(3)
-            with btn_col1:
-                if st.button("Visualizza Ragionamento", width="stretch", type="primary"):
+            # Action Buttons Area - Redesigned to 2 per row
+            st.markdown('<div style="margin-top: 10px; margin-bottom: 25px;">', unsafe_allow_html=True)
+
+            # Row 1: Observation and Export
+            act_col1, act_col2 = st.columns(2)
+            with act_col1:
+                if st.button("Ragionamento", width="stretch", type="primary", icon=":material/psychology_alt:"):
                     show_reasoning_modal(reasoning_data)
-            with btn_col2:
+            with act_col2:
                 pdf_bytes = generate_pdf_report(reasoning_data, cls_data, detections)
                 st.download_button(
                     label="Scarica PDF",
                     data=pdf_bytes,
                     file_name=f"report_xray_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                     mime="application/pdf",
-                    width="stretch"
+                    width="stretch",
+                    icon=":material/picture_as_pdf:"
                 )
-            with btn_col3:
-                # New Archive Logic: Always allowed, shows dialog for naming
+
+            # Row 2: Archiving
+            st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
+            arc_col1, arc_col2 = st.columns(2)
+            with arc_col1:
                 if st.session_state.get('current_analysis_saved', False):
-                    # Still allow saving another instance (multiple saves as requested)
-                    if st.button("Nuova Copia", width="stretch", help="Salva un'altra istanza di questa analisi"):
+                    # Show "Salva un'altra copia" as a secondary action
+                    if st.button("Salva Copia", width="stretch", icon=":material/library_add:"):
                         show_save_archive_dialog({
                             **results,
                             'current_file': uploaded_file.name,
                             'original_img': Image.open(uploaded_file)
                         }, user_pos)
-                    st.button("Archiviato ✅", width="stretch", type="secondary", disabled=True)
                 else:
-                    if st.button("Salva in Archivio", width="stretch", type="primary"):
+                    if st.button("Archivia Analisi", width="stretch", type="primary", icon=":material/archive:"):
                         show_save_archive_dialog({
                             **results,
                             'current_file': uploaded_file.name,
                             'original_img': Image.open(uploaded_file)
                         }, user_pos)
+            with arc_col2:
+                if st.session_state.get('current_analysis_saved', False):
+                    st.button("Archiviato", width="stretch", type="secondary", disabled=True, icon=":material/verified:")
+                else:
+                    st.button("Non Archiviato", width="stretch", type="secondary", disabled=True, icon=":material/history:")
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
             # Image Preview Tabs
             img_tabs = st.tabs(["Rilevamenti YOLO", "Immagine migliorata", "Immagine originale"])
@@ -510,19 +525,19 @@ elif nav_page == "Archivio":
                     st.caption(timestamp)
 
                 with col2:
-                    # Status badge
+                    # Status badge with Font Awesome
                     if analysis['is_positive']:
-                        st.markdown("🔴 Positivo")
+                        st.markdown('<span style="color: #ef4444;"><i class="fa-solid fa-circle-dot"></i> Positivo</span>', unsafe_allow_html=True)
                     else:
-                        st.markdown("🟢 Negativo")
+                        st.markdown('<span style="color: #22c55e;"><i class="fa-solid fa-circle-check"></i> Negativo</span>', unsafe_allow_html=True)
 
                 with col3:
                     # View button
-                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", width="stretch", on_click=set_viewing_archive, args=(analysis['archive_id'],))
+                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", width="stretch", on_click=set_viewing_archive, args=(analysis['archive_id'],), icon=":material/visibility:")
 
                 with col4:
                     # Delete button
-                    st.button("🗑️", key=f"del_{analysis['archive_id']}", help="Elimina", on_click=delete_analysis_cb, args=(analysis['archive_id'],))
+                    st.button("Elimina", key=f"del_{analysis['archive_id']}", help="Elimina", on_click=delete_analysis_cb, args=(analysis['archive_id'],), icon=":material/delete:")
 
                 st.divider()
 
