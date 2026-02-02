@@ -184,12 +184,13 @@ with st.sidebar:
 
 # --- MAIN CONTENT ---
 
+st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
 # 1. PAGE: Terminale Analisi
 if nav_page == "Terminale Analisi":
+    st.markdown("### Carica una radiografia")
     uploaded_file = st.file_uploader(
-        "Carica una radiografia",
-        type=['png', 'jpg', 'jpeg'],
-        help="Puoi trascinare il file direttamente qui o cliccare per selezionarlo dal tuo dispositivo."
+        "",
+        type=['png', 'jpg', 'jpeg']
     )
 
     if not uploaded_file:
@@ -324,13 +325,21 @@ if nav_page == "Terminale Analisi":
             st.markdown("#### Sintesi Diagnostica")
 
             # Result Badge
+            if is_positive:
+                if cls_confidence >= 80: severity_label = "Alta (Critica)"
+                elif cls_confidence >= 50: severity_label = "Moderata"
+                else: severity_label = "Bassa"
+            else:
+                severity_label = "Assente"
+
             st.markdown(RESULT_BADGE_TEMPLATE.format(
                 diag_class="badge-positive" if is_positive else "badge-negative",
                 diag_icon="fa-triangle-exclamation" if is_positive else "fa-circle-check",
                 diag_text=header_text.upper(),
                 conf=cls_confidence,
                 bar_color=header_color,
-                num_detections=len(detections)
+                num_detections=len(detections),
+                severity=severity_label
             ), unsafe_allow_html=True)
 
             if is_positive:
@@ -427,13 +436,21 @@ elif nav_page == "Archivio":
                     diag_icon = "fa-triangle-exclamation" if is_pos else "fa-circle-check"
                     diag_text = "POSITIVO (Polmonite Rilevata)" if is_pos else "NEGATIVO (Reperti Normali)"
 
+                    if is_pos:
+                        if conf >= 80: severity_label = "Alta (Critica)"
+                        elif conf >= 50: severity_label = "Moderata"
+                        else: severity_label = "Bassa"
+                    else:
+                        severity_label = "Assente"
+
                     st.markdown(RESULT_BADGE_TEMPLATE.format(
                         diag_class=diag_class,
                         diag_icon=diag_icon,
                         diag_text=diag_text,
                         conf=conf,
                         bar_color='#ef4444' if is_pos else '#22c55e',
-                        num_detections=len(detections)
+                        num_detections=len(detections),
+                        severity=severity_label
                     ), unsafe_allow_html=True)
 
             else:

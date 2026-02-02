@@ -12,6 +12,12 @@ MAIN_STYLES = """
             background-color: #f8fafc;
         }
 
+        /* Reduce top padding */
+        .block-container {
+            padding-top: 1rem;
+            padding-bottom: 5rem;
+        }
+
         /* Typography */
         .main-header {
             font-size: 2.8rem;
@@ -322,8 +328,8 @@ RESULT_BADGE_TEMPLATE = """
         <i class="fa-solid {diag_icon}"></i> {diag_text}
     </div>
     <div style="margin-top: 20px;">
-        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Punteggio di Confidenza</p>
-        <h2 style="margin: 0; font-weight: 700;">{conf:.1f}%</h2>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0px;">Punteggio di Confidenza</p>
+        <div style="margin: 0; font-weight: 700; font-size: 1.8rem; line-height: 1.2;">{conf:.1f}%</div>
         <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 8px;">
             <div style="background: {bar_color}; width: {conf}%; height: 100%; border-radius: 4px;"></div>
         </div>
@@ -331,9 +337,19 @@ RESULT_BADGE_TEMPLATE = """
     <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
         <div>
             <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Anomalie Focali</p>
-            <h4 style="margin: 0;">{num_detections} Aree</h4>
+            <div style="margin: 0; font-size: 1.2rem; font-weight: 600;">{num_detections} Aree</div>
         </div>
         <i class="fa-solid fa-microscope" style="color: #cbd5e1; font-size: 1.5rem;"></i>
+    </div>
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+    <div>
+    <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Livello di Gravità</p>
+    <div style="margin: 2px 0 0 0; color: #475569; font-weight: 600; font-size: 1rem;">{severity}</div>
+    </div>
+    <div style="text-align: right;">
+    <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Qualità Scansione</p>
+    <div style="margin: 2px 0 0 0; color: #475569; font-weight: 600; font-size: 1rem;">Ottimale (HD)</div>
+    </div>
     </div>
 </div>
 """
