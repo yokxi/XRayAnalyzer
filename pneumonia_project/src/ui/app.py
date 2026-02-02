@@ -18,7 +18,7 @@ st.set_page_config(
 
 from src.ui.styles import (
     EXTERNAL_LINKS, MAIN_STYLES, SPINNER_CSS, SIDEBAR_HEADER, LOADING_HTML,
-    TIMELINE_STEP_TEMPLATE, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
+    TIMELINE_STEP_TEMPLATE, TIMELINE_STEP_HEADER, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
 )
 
 # Load External Resources (Font Awesome & Google Fonts)
@@ -53,11 +53,13 @@ def show_reasoning_modal(reasoning_data):
 
     for tab, step in zip(tabs, steps):
         with tab:
-            st.markdown(TIMELINE_STEP_TEMPLATE.format(
+            st.markdown(TIMELINE_STEP_HEADER.format(
                 icon=step['icon'],
-                title=step['title'],
-                content=step['content']
+                title=step['title']
             ), unsafe_allow_html=True)
+
+            quoted_content = "\n".join([f"> {line}" for line in step['content'].split("\n")])
+            st.markdown(quoted_content)
 
             if step.get('image') is not None:
                 st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
@@ -111,11 +113,13 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
                 tabs = st.tabs([s['title'] for s in completed_steps])
                 for idx, s in enumerate(completed_steps):
                     with tabs[idx]:
-                        st.markdown(TIMELINE_STEP_TEMPLATE.format(
+                        st.markdown(TIMELINE_STEP_HEADER.format(
                             icon=s['icon'],
-                            title=s['title'],
-                            content=s['content']
+                            title=s['title']
                         ), unsafe_allow_html=True)
+
+                        quoted_content = "\n".join([f"> {line}" for line in s['content'].split("\n")])
+                        st.markdown(quoted_content)
 
                         if s.get('image') is not None:
                             st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)

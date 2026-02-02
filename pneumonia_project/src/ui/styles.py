@@ -164,6 +164,21 @@ MAIN_STYLES = """
         div[data-baseweb="tab-list"] button:hover {
             color: #1d4ed8 !important;
         }
+
+        /* Styled Blockquote for Reasoning (Standard Markdown) */
+        blockquote {
+            border-left: 3px solid #60a5fa !important;
+            background: transparent !important;
+            padding: 5px 20px !important;
+            margin: 15px 0 !important;
+            color: #cbd5e1 !important;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        blockquote p {
+            margin-bottom: 0.8rem;
+        }
     </style>
 """
 
@@ -292,6 +307,18 @@ TIMELINE_STEP_TEMPLATE = """
 <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; line-height: 1.7;">
     {content}
+</div>
+"""
+
+# Timeline Step Template (Header Only - for Markdown fix)
+TIMELINE_STEP_HEADER = """
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+    <i class="fa-solid {icon}" style="font-size: 1.2rem; color: #60a5fa;"></i>
+    <strong style="color: #ffffff; font-size: 1.05rem;">{title}</strong>
+    <span style="margin-left: auto; background: #dcfce7; color: #166534;
+                 padding: 3px 10px; border-radius: 10px; font-size: 0.75rem;">
+        <i class="fa-solid fa-check"></i> Completato
+    </span>
 </div>
 """
 
