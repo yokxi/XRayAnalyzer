@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import io
+from PIL import Image
 from openai import OpenAI
 from src import config
 from src.tools.vision import VisionTool
