@@ -173,14 +173,6 @@ with st.sidebar:
 
     st.divider()
 
-    with st.expander("Pipeline di Sistema"):
-        st.markdown("**1. Miglioramento Digitale**\nCLAHE per contrasto locale.")
-        st.markdown("**2. Classificazione Deep**\nSwin-B Transformer.")
-        st.markdown("**3. Rilevamento Oggetti**\nYOLO11 per anomalie focali.")
-        st.markdown("**4. Ragionamento Clinico**\nLLM + RAG per reportistica.")
-
-    st.divider()
-
     st.markdown("""
         <div style="background-color: #fefce8; padding: 1rem; border-radius: 8px; border: 1px solid #fef08a;">
             <p style="color: #854d0e; font-size: 0.8rem; margin: 0;">
@@ -215,11 +207,7 @@ if nav_page == "Terminale Analisi":
         if 'current_file' in st.session_state:
             del st.session_state.current_file
     else:
-        # Save temporary file
         temp_path = f"/app/temp/{uploaded_file.name}"
-        os.makedirs("/app/temp", exist_ok=True)
-        with open(temp_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
 
         # Check if we need to run the pipeline (new file or first run)
         need_analysis = (
@@ -229,6 +217,11 @@ if nav_page == "Terminale Analisi":
 
         # Run Pipeline if needed - show live reasoning modal
         if need_analysis:
+            # Save temporary file ONLY when analysis is needed
+            os.makedirs("/app/temp", exist_ok=True)
+            with open(temp_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
             metadata = user_pos if user_pos != "Non Specificata" else None
 
             pipeline_gen = agent.run_full_pipeline_streaming(
@@ -237,6 +230,10 @@ if nav_page == "Terminale Analisi":
 
             # Open the live reasoning modal (results are saved to session_state inside)
             show_live_reasoning_modal(pipeline_gen, uploaded_file.name)
+
+            # Cleanup temporary file immediately after analysis
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
         # Retrieve results from session state
         if 'analysis_results' not in st.session_state:

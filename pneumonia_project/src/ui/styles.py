@@ -140,6 +140,20 @@ MAIN_STYLES = """
             border-color: #1d4ed8;
             color: white;
         }
+
+        /* Custom Tab Styling */
+        div[data-baseweb="tab-list"] button[aria-selected="true"] {
+             color: #1d4ed8 !important;
+             background-color: transparent !important;
+        }
+
+        div[data-baseweb="tab-highlight"] {
+             background-color: #1d4ed8 !important;
+        }
+
+        div[data-baseweb="tab-list"] button:hover {
+            color: #1d4ed8 !important;
+        }
     </style>
 """
 
