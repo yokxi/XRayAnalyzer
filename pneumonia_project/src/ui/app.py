@@ -279,7 +279,7 @@ if nav_page == "Terminale Analisi":
             # Action Buttons
             btn_col1, btn_col2, btn_col3 = st.columns(3)
             with btn_col1:
-                if st.button("Visualizza Ragionamento", use_container_width=True, type="primary"):
+                if st.button("Visualizza Ragionamento", width="stretch", type="primary"):
                     show_reasoning_modal(reasoning_data)
             with btn_col2:
                 pdf_bytes = generate_pdf_report(reasoning_data, cls_data, detections)
@@ -288,7 +288,7 @@ if nav_page == "Terminale Analisi":
                     data=pdf_bytes,
                     file_name=f"report_xray_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                     mime="application/pdf",
-                    use_container_width=True
+                    width="stretch"
                 )
             with btn_col3:
                 # Archive Logic
@@ -298,9 +298,9 @@ if nav_page == "Terminale Analisi":
                 existing_archive = is_already_archived(image_hash)
 
                 if existing_archive:
-                    st.button("Archiviato ✅", use_container_width=True, disabled=True)
+                    st.button("Archiviato ✅", width="stretch", disabled=True)
                 else:
-                    if st.button("Salva in Archivio", use_container_width=True):
+                    if st.button("Salva in Archivio", width="stretch"):
                         original_img = Image.open(uploaded_file)
                         archive_id = save_analysis(
                             filename=uploaded_file.name,
@@ -319,11 +319,11 @@ if nav_page == "Terminale Analisi":
             # Image Preview Tabs
             img_tabs = st.tabs(["Rilevamenti AI", "Migliorata", "Originale"])
             with img_tabs[0]:
-                st.image(yolo_img, use_container_width=True, caption=f"{len(detections)} anomalie identificate")
+                st.image(yolo_img, width="stretch", caption=f"{len(detections)} anomalie identificate")
             with img_tabs[1]:
-                st.image(processed_img, use_container_width=True, caption="Immagine preprocessata (CLAHE)")
+                st.image(processed_img, width="stretch", caption="Immagine preprocessata (CLAHE)")
             with img_tabs[2]:
-                st.image(uploaded_file, use_container_width=True, caption="Input originale")
+                st.image(uploaded_file, width="stretch", caption="Input originale")
 
         with res_col_data:
             st.markdown("#### Sintesi Diagnostica")
@@ -392,7 +392,7 @@ elif nav_page == "Archivio":
                     btn1, btn2 = st.columns(2)
                     with btn1:
                         if archived.get('reasoning_data'):
-                            if st.button("Visualizza Ragionamento", use_container_width=True, type="primary", key="archive_reasoning"):
+                            if st.button("Visualizza Ragionamento", width="stretch", type="primary", key="archive_reasoning"):
                                 show_reasoning_modal(archived['reasoning_data'])
                     with btn2:
                         if archived.get('reasoning_data') and archived.get('cls_data'):
@@ -406,20 +406,20 @@ elif nav_page == "Archivio":
                                 data=pdf_bytes,
                                 file_name=f"report_{archive_id}.pdf",
                                 mime="application/pdf",
-                                use_container_width=True
+                                width="stretch"
                             )
 
                     # Image tabs
                     img_tabs = st.tabs(["Rilevamenti YOLO", "Analisi Processata", "Vista Originale"])
                     with img_tabs[0]:
                         if archived.get('yolo_img'):
-                            st.image(archived['yolo_img'], use_container_width=True)
+                            st.image(archived['yolo_img'], width="stretch")
                     with img_tabs[1]:
                         if archived.get('processed_img'):
-                            st.image(archived['processed_img'], use_container_width=True)
+                            st.image(archived['processed_img'], width="stretch")
                     with img_tabs[2]:
                         if archived.get('original_img'):
-                            st.image(archived['original_img'], use_container_width=True)
+                            st.image(archived['original_img'], width="stretch")
 
                 with res_col_data:
                     st.markdown("#### Sintesi Diagnostica")
@@ -466,7 +466,7 @@ elif nav_page == "Archivio":
 
                 with col3:
                     # View button
-                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", use_container_width=True, on_click=set_viewing_archive, args=(analysis['archive_id'],))
+                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", width="stretch", on_click=set_viewing_archive, args=(analysis['archive_id'],))
 
                 with col4:
                     # Delete button
