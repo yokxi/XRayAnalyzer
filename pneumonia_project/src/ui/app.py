@@ -130,6 +130,42 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
     if st.button("Chiudi e Visualizza Risultati", type="primary", width="stretch"):
         st.rerun()
 
+@st.dialog("Salva in Archivio")
+def show_save_archive_dialog(results, user_pos):
+    """Modale per rinominare e salvare l'analisi."""
+    st.markdown("Scegli un nome per identificare questa analisi nell'archivio:")
+
+    current_filename = results['current_file']
+    custom_name = st.text_input("Nome Archivio", value=current_filename)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Annulla", width="stretch"):
+            st.rerun()
+    with col2:
+        if st.button("Conferma Salvataggio", type="primary", width="stretch"):
+            with st.spinner("Salvataggio in corso..."):
+                # Prepare data
+                image_hash = compute_image_hash(results['original_img'])
+
+                # Save
+                save_analysis(
+                    filename=custom_name,
+                    original_img=results['original_img'],
+                    processed_img=results['processed_img'],
+                    yolo_img=results['yolo_img'],
+                    cls_data=results['cls_data'],
+                    detections=results['detections'],
+                    reasoning_data=results['reasoning_data'],
+                    metadata={"proiezione": user_pos},
+                    image_hash=image_hash
+                )
+
+                # Update session state to show "Archiviato ✅"
+                st.session_state.current_analysis_saved = True
+                st.toast(f"Analisi '{custom_name}' salvata!", icon="✅")
+                st.rerun()
+
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown(SIDEBAR_HEADER, unsafe_allow_html=True)
@@ -212,6 +248,8 @@ if nav_page == "Terminale Analisi":
             del st.session_state.analysis_results
         if 'current_file' in st.session_state:
             del st.session_state.current_file
+        if 'current_analysis_saved' in st.session_state:
+            del st.session_state.current_analysis_saved
     else:
         temp_path = f"/app/temp/{uploaded_file.name}"
 
@@ -223,6 +261,10 @@ if nav_page == "Terminale Analisi":
 
         # Run Pipeline if needed - show live reasoning modal
         if need_analysis:
+            # Reset analysis-specific states
+            if 'current_analysis_saved' in st.session_state:
+                del st.session_state.current_analysis_saved
+
             # Save temporary file ONLY when analysis is needed
             os.makedirs("/app/temp", exist_ok=True)
             with open(temp_path, "wb") as f:
@@ -292,30 +334,23 @@ if nav_page == "Terminale Analisi":
                     width="stretch"
                 )
             with btn_col3:
-                # Archive Logic
-                uploaded_file.seek(0)
-                image_hash = compute_image_hash(uploaded_file)
-                uploaded_file.seek(0)
-                existing_archive = is_already_archived(image_hash)
-
-                if existing_archive:
-                    st.button("Archiviato ✅", width="stretch", disabled=True)
+                # New Archive Logic: Always allowed, shows dialog for naming
+                if st.session_state.get('current_analysis_saved', False):
+                    # Still allow saving another instance (multiple saves as requested)
+                    if st.button("Nuova Copia", width="stretch", help="Salva un'altra istanza di questa analisi"):
+                        show_save_archive_dialog({
+                            **results,
+                            'current_file': uploaded_file.name,
+                            'original_img': Image.open(uploaded_file)
+                        }, user_pos)
+                    st.button("Archiviato ✅", width="stretch", type="secondary", disabled=True)
                 else:
-                    if st.button("Salva in Archivio", width="stretch"):
-                        original_img = Image.open(uploaded_file)
-                        archive_id = save_analysis(
-                            filename=uploaded_file.name,
-                            original_img=original_img,
-                            processed_img=processed_img,
-                            yolo_img=yolo_img,
-                            cls_data=cls_data,
-                            detections=detections,
-                            reasoning_data=reasoning_data,
-                            metadata={"proiezione": user_pos},
-                            image_hash=image_hash
-                        )
-                        st.toast("Analisi salvata in archivio!", icon="✅")
-                        st.rerun()
+                    if st.button("Salva in Archivio", width="stretch", type="primary"):
+                        show_save_archive_dialog({
+                            **results,
+                            'current_file': uploaded_file.name,
+                            'original_img': Image.open(uploaded_file)
+                        }, user_pos)
 
             # Image Preview Tabs
             img_tabs = st.tabs(["Rilevamenti YOLO", "Immagine migliorata", "Immagine originale"])
