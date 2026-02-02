@@ -111,7 +111,7 @@ class VisionTool:
         print(f"1. [Swin-B] Confidence Globale: {swin_conf:.4f}")
 
         # --- STAGE 2: DETECTION ENSEMBLE CON TTA ---
-        # Eseguiamo entrambi i modelli con TTA (augment=config.USE_TTA)
+        # Eseguiamo entrambi i modelli con TTA (augment=True)
         res_v10 = None
         res_v11 = None
 
@@ -122,7 +122,7 @@ class VisionTool:
                     source=clahe_img,
                     imgsz=1024,
                     conf=0.15,
-                    augment=config.USE_TTA,
+                    augment=True,
                     verbose=False
                 )[0]
                 print(f"2. [YOLOv10] Box trovati: {len(res_v10.boxes)} | Max Conf: {res_v10.boxes.conf.max().item() if len(res_v10.boxes)>0 else 0:.4f}")
@@ -138,7 +138,7 @@ class VisionTool:
                     source=clahe_img,
                     imgsz=1024,
                     conf=0.15,
-                    augment=config.USE_TTA,
+                    augment=True,
                     verbose=False
                 )[0]
                 print(f"3. [YOLOv11] Box trovati: {len(res_v11.boxes)} | Max Conf: {res_v11.boxes.conf.max().item() if len(res_v11.boxes)>0 else 0:.4f}")

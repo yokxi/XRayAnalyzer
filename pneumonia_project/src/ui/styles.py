@@ -212,75 +212,70 @@ LOADING_HTML = """
         background: transparent;
         font-family: 'Outfit', sans-serif;
     }
-
     .scanner-box {
         position: relative;
-        width: 120px;
-        height: 120px;
+        width: 140px;
+        height: 140px;
         margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-
     .lung-icon {
-        width: 100%;
-        height: 100%;
-        opacity: 0.8;
-        filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.5));
+        width: 100px;
+        height: 100px;
+        filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.4));
+        animation: breathe 1.5s ease-in-out infinite;
+        z-index: 2;
     }
-
     .scan-line {
         position: absolute;
         top: 0;
-        left: -10%;
-        width: 120%;
-        height: 4px;
-        background: #00f2fe;
-        box-shadow: 0 0 15px #00f2fe, 0 0 5px #4facfe;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
         animation: scan 2s ease-in-out infinite;
-        border-radius: 50%;
-        opacity: 0.8;
+        z-index: 3;
     }
-
     @keyframes scan {
-        0% { top: 0%; opacity: 0; }
-        15% { opacity: 1; }
-        50% { top: 100%; }
-        85% { opacity: 1; }
-        100% { top: 0%; opacity: 0; }
+        0%, 100% { top: 10%; opacity: 0; }
+        20%, 80% { opacity: 1; }
+        50% { top: 90%; }
     }
-
+    @keyframes breathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
     .loader-text {
-        font-size: 1.5rem;
-        font-weight: 600;
+        font-size: 1.6rem;
+        font-weight: 700;
         color: #1e293b;
-        letter-spacing: 1px;
         margin-top: 10px;
-        background: linear-gradient(90deg, #2563eb, #00f2fe, #2563eb);
+        background: linear-gradient(90deg, #1d4ed8, #60a5fa);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        background-size: 200% auto;
-        animation: shine 3s linear infinite;
     }
-
     .loader-subtext {
         color: #64748b;
-        font-size: 0.9rem;
-        margin-top: 8px;
-    }
-
-    @keyframes shine {
-        to {
-            background-position: 200% center;
-        }
+        font-size: 0.95rem;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 </style>
-
 <div class="loader-container">
     <div class="scanner-box">
-        <img src="https://img.icons8.com/ink/color/96/lungs.png" class="lung-icon">
         <div class="scan-line"></div>
+        <img src="https://img.icons8.com/ink/color/96/lungs.png" class="lung-icon">
     </div>
-    <div class="loader-text">INIZIALIZZAZIONE SISTEMI</div>
-    <div class="loader-subtext">Caricamento modelli neurali e pipeline diagnostica...</div>
+    <div class="loader-text">Configurazione Analisi</div>
+    <div class="loader-subtext">
+        <div class="analyzing-spinner" style="width: 12px; height: 12px; border-width: 2px;"></div>
+        Caricamento modelli neurali...
+    </div>
 </div>
 """
 
