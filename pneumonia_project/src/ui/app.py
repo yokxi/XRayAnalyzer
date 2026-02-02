@@ -189,8 +189,9 @@ st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
 if nav_page == "Terminale Analisi":
     st.markdown("### Carica una radiografia")
     uploaded_file = st.file_uploader(
-        "",
-        type=['png', 'jpg', 'jpeg']
+        "Carica Radiografia",
+        type=['png', 'jpg', 'jpeg'],
+        label_visibility="collapsed"
     )
 
     if not uploaded_file:

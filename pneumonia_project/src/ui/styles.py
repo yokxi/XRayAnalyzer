@@ -19,6 +19,10 @@ MAIN_STYLES = """
         }
 
         /* Typography */
+        h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+            display: none !important;
+        }
+
         .main-header {
             font-size: 2.8rem;
             font-weight: 700;
@@ -311,12 +315,12 @@ TIMELINE_ACTIVE_TEMPLATE = """
 
 # Metric Card Template
 METRIC_CARD_TEMPLATE = """
-<div style="background-color: {color}10; border: 1px solid {color}40; padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;">
-    <div style="background-color: {color}20; padding: 12px; border-radius: 50%; margin-bottom: 15px;">
-        <i class="fa-solid {icon}" style="font-size: 1.5rem; color: {color}; display: block;"></i>
+<div style="background: linear-gradient(135deg, {color} 0%, {color}dd 100%); padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px {color}40; border: 1px solid {color}20;">
+    <div style="background-color: rgba(255, 255, 255, 0.2); padding: 12px; border-radius: 50%; margin-bottom: 15px;">
+        <i class="fa-solid {icon}" style="font-size: 1.5rem; color: #ffffff; display: block;"></i>
     </div>
-    <p style="margin: 0; font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{title}</p>
-    <h3 style="margin: 5px 0 0 0; color: #1e293b; font-size: 2rem; font-weight: 800;">{value}</h3>
+    <p style="margin: 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">{title}</p>
+    <div style="margin: 5px 0 0 0; color: #ffffff; font-size: 2.2rem; font-weight: 800; line-height: 1;">{value}</div>
 </div>
 """
 
@@ -341,15 +345,15 @@ RESULT_BADGE_TEMPLATE = """
         </div>
         <i class="fa-solid fa-microscope" style="color: #cbd5e1; font-size: 1.5rem;"></i>
     </div>
-    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
-    <div>
-    <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Livello di Gravità</p>
-    <div style="margin: 2px 0 0 0; color: #475569; font-weight: 600; font-size: 1rem;">{severity}</div>
-    </div>
-    <div style="text-align: right;">
-    <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Qualità Scansione</p>
-    <div style="margin: 2px 0 0 0; color: #475569; font-weight: 600; font-size: 1rem;">Ottimale (HD)</div>
-    </div>
+    <div style="margin-top: 15px; margin-bottom: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+        <div>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Livello di Gravità</p>
+            <div style="margin: 2px 0 0 0; color: #475569; font-weight: 600; font-size: 1rem;">{severity}</div>
+        </div>
+        <div style="text-align: right;">
+            <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Qualità Scansione</p>
+            <div style="margin: 2px 0 0 0; color: #475569; font-weight: 600; font-size: 1rem;">Ottimale (HD)</div>
+        </div>
     </div>
 </div>
 """
