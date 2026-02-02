@@ -58,6 +58,7 @@ def show_reasoning_modal(reasoning_data):
             ), unsafe_allow_html=True)
 
             if step.get('image') is not None:
+                st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
                 st.image(step['image'], caption="Area analizzata", width=300)
 
 
@@ -115,6 +116,7 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
                         ), unsafe_allow_html=True)
 
                         if s.get('image') is not None:
+                            st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
                             st.image(s['image'], caption="Area analizzata", width=280)
 
     # Analysis Complete - Show Close Button

@@ -96,6 +96,21 @@ def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, det
         if det.get('image_crop'):
             det['image_crop'].save(crops_dir / f"crop_{i+1}.png")
 
+    # Save reasoning step images
+    steps_dir = analysis_dir / "steps"
+    steps_dir.mkdir(exist_ok=True)
+
+    serialized_steps = []
+    for i, step in enumerate(reasoning_data.get('steps', [])):
+        step_copy = {k: v for k, v in step.items() if k != 'image'}
+
+        if step.get('image'):
+            step_filename = f"step_{i}.png"
+            step['image'].save(steps_dir / step_filename)
+            step_copy['image_file'] = step_filename
+
+        serialized_steps.append(step_copy)
+
     # Prepare metadata JSON
     analysis_data = {
         "archive_id": archive_id,
@@ -105,10 +120,7 @@ def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, det
         "cls_data": cls_data,
         "detections": serializable_detections,
         "reasoning_data": {
-            "steps": [
-                {k: v for k, v in step.items() if k != 'image'}
-                for step in reasoning_data.get('steps', [])
-            ],
+            "steps": serialized_steps,
             "full_markdown": reasoning_data.get('full_markdown', '')
         },
         "metadata": metadata or {}
@@ -193,8 +205,17 @@ def load_analysis(archive_id):
                 det['image_crop'] = Image.open(crop_path)
 
     # Rebuild reasoning_data steps with images if needed
+    steps_dir = analysis_dir / "steps"
     for step in data.get('reasoning_data', {}).get('steps', []):
-        step['image'] = None  # Images in steps are crops, handled via detections
+        image_file = step.get('image_file')
+        if image_file:
+            img_path = steps_dir / image_file
+            if img_path.exists():
+                step['image'] = Image.open(img_path)
+            else:
+                step['image'] = None
+        else:
+            step['image'] = None
 
     return data
 
