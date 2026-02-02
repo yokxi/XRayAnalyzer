@@ -9,7 +9,7 @@ import torch.nn as nn
 from ensemble_boxes import weighted_boxes_fusion # Necessario: pip install ensemble-boxes
 from src import config
 
-# 1. INIEZIONE MODULO MLCA SOTA (Necessario per caricare YOLOv10)
+# Iniezione del modulo MLCA (Multi-Level Context Attention) per il supporto nativo di YOLOv10
 class MLCA(nn.Module):
     def __init__(self, c1, c2=None):
         super().__init__()
@@ -21,7 +21,6 @@ class MLCA(nn.Module):
     def forward(self, x):
         return x * self.sig(self.conv(self.gap(x)))
 
-# Patch dinamica della libreria Ultralytics prima del caricamento
 import ultralytics.nn.tasks as tasks
 import ultralytics.nn.modules as modules
 tasks.MLCA = MLCA
@@ -32,9 +31,8 @@ class VisionTool:
     def __init__(self, v10_model_path=config.YOLO10_MODEL_PATH, v11_model_path=config.YOLO11_MODEL_PATH, classifier_weights_path=config.CLASSIFIER_MODEL_PATH):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # 1. STAGE 1: Classificatore Swin-B (Filtro Globale)
+        # Classificatore Swin-B: Agisce come gatekeeper globale per ridurre i falsi positivi
         print(f"Inizializzazione Swin-B SOTA da: {classifier_weights_path}")
-
         self.classifier = models.swin_b()
         n_inputs = self.classifier.head.in_features
         self.classifier.head = nn.Sequential(
@@ -51,11 +49,11 @@ class VisionTool:
 
         self.classifier.to(self.device).eval()
 
-        # 2. STAGE 2: Detector YOLO11 (Localizzazione)
+        # Ensemble YOLO: v10 (bilanciato) + v11 (SOTA) per massimizzare la recall
         print(f"Inizializzazione Ensemble YOLOv10 + YOLOv11 da: {v10_model_path} e {v11_model_path}")
         if os.path.exists(v10_model_path) and os.path.exists(v11_model_path):
-            self.yolo_v10 = YOLO(v10_model_path) # Il tuo v10 con BiFPN/MLCA
-            self.yolo_v11 = YOLO(v11_model_path) # Il v11 standard/SOTA
+            self.yolo_v10 = YOLO(v10_model_path)
+            self.yolo_v11 = YOLO(v11_model_path)
         else:
             print(f"Errore: Pesi YOLO non trovati in {v10_model_path} o {v11_model_path}")
             self.yolo_v10 = None
@@ -99,7 +97,7 @@ class VisionTool:
         clahe_img = self.apply_clahe(raw_img)
         width, height = clahe_img.size
 
-        # --- STAGE 1: CLASSIFICAZIONE (Swin-B) ---
+        # Classificazione globale: Determina se l'immagine richiede un'analisi locale approfondita
         input_tensor = self.classifier_transform(clahe_img).unsqueeze(0).to(self.device)
         with torch.no_grad():
             output = self.classifier(input_tensor)
@@ -110,8 +108,7 @@ class VisionTool:
         print(f"\n--- DEBUG PIPELINE SOTA ---")
         print(f"1. [Swin-B] Confidence Globale: {swin_conf:.4f}")
 
-        # --- STAGE 2: DETECTION ENSEMBLE CON TTA ---
-        # Eseguiamo entrambi i modelli con TTA (augment=True)
+        # Detection multi-modello con TTA per migliorare la robustezza alle variazioni di input
         res_v10 = None
         res_v11 = None
 
@@ -185,7 +182,7 @@ class VisionTool:
             )
 
             for i, (box, score) in enumerate(zip(f_boxes, f_scores)):
-                # CALCOLO DETTAGLIATO
+                # La confidenza finale è una media ponderata: 60% Swin-B (giudice globale) e 40% YOLO (consenso locale)
                 yolo_ensemble_contribution = score * 0.4
                 swin_contribution = swin_conf * 0.6
                 final_conf = yolo_ensemble_contribution + swin_contribution

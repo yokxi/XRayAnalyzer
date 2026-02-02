@@ -8,7 +8,6 @@ from src.agent.brain import MedicalAgent
 from src.utils.pdf_generator import generate_pdf_report
 from src.utils.archive import save_analysis, list_analyses, load_analysis, delete_analysis, is_already_archived, compute_image_hash, get_performance_stats
 
-# Page Configuration
 st.set_page_config(
     page_title="XRayAnalyzer | Supporto Clinico AI",
     page_icon="https://img.icons8.com/ink/color/96/lungs.png",
@@ -21,7 +20,7 @@ from src.ui.styles import (
     TIMELINE_STEP_TEMPLATE, TIMELINE_STEP_HEADER, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
 )
 
-# Load External Resources (Font Awesome & Google Fonts)
+# Integrazione stili globali e link esterni (FontAwesome/GoogleFonts)
 st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 
 # Agent Caching
@@ -29,15 +28,11 @@ st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 def load_medical_agent():
     return MedicalAgent()
 
+# Gestione persistenza dell'agente diagnostico nella sessione Streamlit
 if "agent" not in st.session_state:
-    # Custom Loading Screen
     placeholder = st.empty()
     placeholder.markdown(LOADING_HTML, unsafe_allow_html=True)
-
-    # Load Model
     st.session_state.agent = load_medical_agent()
-
-    # Clear Loader
     placeholder.empty()
 
 agent = st.session_state.agent
@@ -81,8 +76,8 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
     tabs_placeholder = st.empty()
 
     for step, is_final, final_data in pipeline_generator:
+        # Se is_final è True, il generatore ha completato l'intero workflow (Vision + GPT-4o)
         if is_final:
-            # Save final results to session state
             reasoning_data_final, processed_img, yolo_img, detections, cls_data = final_data
             reasoning_data = {
                 "steps": completed_steps,
@@ -170,7 +165,7 @@ def show_save_archive_dialog(results, user_pos):
 with st.sidebar:
     st.markdown(SIDEBAR_HEADER, unsafe_allow_html=True)
 
-    # Init Navigation State
+    # Navigazione basata su session_state per mantenere lo stato al refresh
     if "page" not in st.session_state:
         st.session_state.page = "Terminale Analisi"
 
@@ -255,15 +250,13 @@ if nav_page == "Terminale Analisi":
     else:
         temp_path = f"/app/temp/{uploaded_file.name}"
 
-        # Check if we need to run the pipeline (new file or first run)
+        # Esecuzione della pipeline solo se il file è nuovo o non ancora analizzato
         need_analysis = (
             'current_file' not in st.session_state or
             st.session_state.current_file != uploaded_file.name
         )
-
-        # Run Pipeline if needed - show live reasoning modal
         if need_analysis:
-            # Reset analysis-specific states
+            # Reset dello stato salvataggio per la nuova analisi
             if 'current_analysis_saved' in st.session_state:
                 del st.session_state.current_analysis_saved
 
@@ -297,12 +290,13 @@ if nav_page == "Terminale Analisi":
         detections = results['detections']
         cls_data = results['cls_data']
 
-        # Results Header
+        # Dati riassuntivi della classificazione globale
         cls_confidence = cls_data['confidence'] * 100
         is_positive = cls_data['is_positive']
         header_color = "#ef4444" if is_positive else "#22c55e"
         header_text = "Rilevata Polmonite" if is_positive else "Reperti Normali"
 
+        # Header con esito rapido basato sulla classificazione globale
         st.markdown(f"""
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
                 <div>
@@ -379,7 +373,7 @@ if nav_page == "Terminale Analisi":
         with res_col_data:
             st.markdown("#### Sintesi Diagnostica")
 
-            # Result Badge
+            # Calcolo della severità clinica basato sulla confidenza del classificatore
             if is_positive:
                 if cls_confidence >= 80: severity_label = "Alta (Critica)"
                 elif cls_confidence >= 50: severity_label = "Moderata"
@@ -425,7 +419,6 @@ elif nav_page == "Archivio":
     def delete_analysis_cb(archive_id):
         delete_analysis(archive_id)
 
-    # List saved analyses
     analyses = list_analyses()
 
     if not analyses:
@@ -443,11 +436,10 @@ elif nav_page == "Archivio":
                 st.markdown(f"### {archived['filename']}")
                 st.caption(f"Analizzato il: {archived['timestamp']}")
 
-                # Results layout (readonly)
+                # Visualizzazione in sola lettura dei risultati archiviati
                 res_col_imgs, res_col_data = st.columns([1.2, 0.8])
 
                 with res_col_imgs:
-                    # Buttons row
                     btn1, btn2 = st.columns(2)
                     with btn1:
                         if archived.get('reasoning_data'):
@@ -468,7 +460,6 @@ elif nav_page == "Archivio":
                                 width="stretch"
                             )
 
-                    # Image tabs
                     img_tabs = st.tabs(["Rilevamenti YOLO", "Analisi Processata", "Vista Originale"])
                     with img_tabs[0]:
                         if archived.get('yolo_img'):
@@ -519,7 +510,6 @@ elif nav_page == "Archivio":
                 col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
 
                 with col1:
-                    # Filename and date
                     timestamp = analysis['timestamp'][:16].replace('T', ' ') if analysis['timestamp'] else ''
                     st.markdown(f"**{analysis['filename']}**")
                     st.caption(timestamp)
@@ -550,7 +540,7 @@ elif nav_page == "Performance":
     if stats['total'] == 0:
         st.info("Nessun dato disponibile. Salva delle analisi nell'archivio per popolare la dashboard.")
     else:
-        # KPI ROW
+        # Riepilogo metriche principali (KPI) dell'intero archivio
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
@@ -586,9 +576,7 @@ elif nav_page == "Performance":
             ), unsafe_allow_html=True)
 
         st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
-        st.markdown("#### Distribuzione Casi")
-
-        # Altair Chart for precise coloring
+        # Grafico di distribuzione dei casi (Positivi vs Negativi)
         chart_data = pd.DataFrame([
             {"Tipologia": "Polmonite (Positivi)", "Quantità": stats['positive'], "Color": "#ef4444"},
             {"Tipologia": "Sani (Negativi)", "Quantità": stats['negative'], "Color": "#22c55e"}

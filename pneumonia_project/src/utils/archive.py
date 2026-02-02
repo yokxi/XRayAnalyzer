@@ -9,15 +9,7 @@ ARCHIVE_DIR = Path("/app/archive")
 
 
 def compute_image_hash(image):
-    """
-    Compute MD5 hash of an image.
-
-    Args:
-        image: PIL Image or file-like object
-
-    Returns:
-        MD5 hash string
-    """
+    """Calcola l'hash MD5 per identificare univocamente l'immagine (evita duplicati nel DB)."""
     import io
 
     if isinstance(image, Image.Image):
@@ -42,40 +34,23 @@ def get_archive_dir():
 
 
 def generate_archive_id(filename):
-    """Generate unique archive ID based on timestamp and filename."""
+    """Genera un ID univoco combinando timestamp e nome file sanificato."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_filename = "".join(c if c.isalnum() else "_" for c in Path(filename).stem)[:30]
     return f"{timestamp}_{safe_filename}"
 
 
 def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, detections, reasoning_data, metadata=None, image_hash=None):
-    """
-    Save an analysis to the archive.
-
-    Args:
-        filename: Original filename
-        original_img: PIL Image (original)
-        processed_img: PIL Image (CLAHE processed)
-        yolo_img: PIL Image (with YOLO bounding boxes)
-        cls_data: dict with is_positive, confidence
-        detections: list of detection dicts
-        reasoning_data: dict with steps and full_markdown
-        metadata: optional dict with extra info (e.g., proiezione)
-        image_hash: MD5 hash of the original image
-
-    Returns:
-        archive_id: The ID of the saved analysis
-    """
+    """Salvataggio persistente su disco: immagini processate, crops delle anomalie e metadati JSON."""
     archive_dir = get_archive_dir()
     archive_id = generate_archive_id(filename)
     analysis_dir = archive_dir / archive_id
     analysis_dir.mkdir(parents=True, exist_ok=True)
 
-    # Compute hash if not provided
     if image_hash is None and original_img:
         image_hash = compute_image_hash(original_img)
 
-    # Save images
+    # Salvataggio set completo di immagini (originale, contrastata, annotata)
     if original_img:
         original_img.save(analysis_dir / "original.png")
     if processed_img:
@@ -83,7 +58,7 @@ def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, det
     if yolo_img:
         yolo_img.save(analysis_dir / "yolo.png")
 
-    # Save detection crops
+    # Estrazione e salvataggio dei ritagli (crops) specifici per ogni anomalia rilevata
     crops_dir = analysis_dir / "crops"
     crops_dir.mkdir(exist_ok=True)
 
@@ -96,7 +71,7 @@ def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, det
         if det.get('image_crop'):
             det['image_crop'].save(crops_dir / f"crop_{i+1}.png")
 
-    # Save reasoning step images
+    # Persistenza degli step intermedi del ragionamento AI (se presenti immagini associate)
     steps_dir = analysis_dir / "steps"
     steps_dir.mkdir(exist_ok=True)
 
@@ -111,7 +86,7 @@ def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, det
 
         serialized_steps.append(step_copy)
 
-    # Prepare metadata JSON
+    # Assemblaggio dizionario metadati finale per ricerca e ricostruzione sessione
     analysis_data = {
         "archive_id": archive_id,
         "filename": filename,
