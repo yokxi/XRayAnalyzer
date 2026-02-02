@@ -61,9 +61,9 @@ def show_reasoning_modal(reasoning_data):
                 st.image(step['image'], caption="Area analizzata", width=300)
 
 
-@st.dialog("Analisi in Corso...", width="large")
+@st.dialog("Terminale di Ragionamento", width="large", dismissible=False)
 def show_live_reasoning_modal(pipeline_generator, file_name):
-    """Modale che mostra il ragionamento in tempo reale con Timeline Verticale."""
+    """Modale che mostra il ragionamento in tempo reale con Tabs."""
     completed_steps = []
     processed_img = None
     detections = []
@@ -72,13 +72,8 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
     # Spinner CSS
     st.markdown(SPINNER_CSS, unsafe_allow_html=True)
 
-    # Main container for the timeline
-    timeline_placeholder = st.empty()
-
-    # Track next step info for "Analizzando..."
-    next_step_title = "Elaborazione Visiva"
-    next_step_icon = "fa-eye"
-    step_count = 0
+    # Main container for the tabs
+    tabs_placeholder = st.empty()
 
     for step, is_final, final_data in pipeline_generator:
         if is_final:
@@ -106,47 +101,26 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
             cls_data = final_data[4]
 
         completed_steps.append(step)
-        step_count += 1
 
-        # Determine next step info based on what's coming
-        if step['id'] == 'vision_init':
-            next_step_title = "Analisi Tecnica"
-            next_step_icon = "fa-microscope"
-        elif step['id'] == 'tech_analysis':
-            if len(detections) > 0:
-                next_step_title = f"Analisi Area 1/{len(detections)}"
-                next_step_icon = "fa-bullseye"
-            elif cls_data and cls_data['is_positive']:
-                next_step_title = "Analisi Opacità Diffusa"
-                next_step_icon = "fa-cloud"
-            else:
-                next_step_title = None  # No more steps
-        elif 'detection_' in step['id']:
-            det_num = int(step['id'].split('_')[1])
-            if det_num < len(detections):
-                next_step_title = f"Analisi Area {det_num + 1}/{len(detections)}"
-                next_step_icon = "fa-bullseye"
-            else:
-                next_step_title = None
+        # Re-render tabs
+        with tabs_placeholder.container():
+            if completed_steps:
+                tabs = st.tabs([s['title'] for s in completed_steps])
+                for idx, s in enumerate(completed_steps):
+                    with tabs[idx]:
+                        st.markdown(TIMELINE_STEP_TEMPLATE.format(
+                            icon=s['icon'],
+                            title=s['title'],
+                            content=s['content']
+                        ), unsafe_allow_html=True)
 
-        # Re-render the full timeline
-        with timeline_placeholder.container():
-            for s in completed_steps:
-                with st.expander(f"{s['title']}", expanded=False):
-                    st.markdown(TIMELINE_STEP_TEMPLATE.format(
-                        icon=s['icon'],
-                        title=s['title'],
-                        content=s['content']
-                    ), unsafe_allow_html=True)
+                        if s.get('image') is not None:
+                            st.image(s['image'], caption="Area analizzata", width=280)
 
-                    if s.get('image') is not None:
-                        st.image(s['image'], caption="Area analizzata", width=280)
-
-            # Render "Active" step
-            if next_step_title:
-                 st.markdown(TIMELINE_ACTIVE_TEMPLATE.format(
-                     title=next_step_title
-                 ), unsafe_allow_html=True)
+    # Analysis Complete - Show Close Button
+    st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    if st.button("Chiudi e Visualizza Risultati", type="primary", width="stretch"):
+        st.rerun()
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -166,17 +140,6 @@ with st.sidebar:
         "Proiezione RX",
         ["Non Specificata", "AP (Antero-Posteriore)", "PA (Postero-Anteriore)"],
         help="Specificare la proiezione migliora la precisione del ragionamento diagnostico."
-    )
-
-    st.divider()
-
-    # File Uploader in Sidebar (Persistent)
-    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b;">IMPORTA RADIOGRAFIA</p>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader(
-        "Carica CXR",
-        type=['png', 'jpg', 'jpeg'],
-        label_visibility="collapsed",
-        help="Carica una radiografia per avviare l'analisi."
     )
 
     st.divider()
@@ -202,12 +165,18 @@ with st.sidebar:
 
 # 1. PAGE: Terminale Analisi
 if nav_page == "Terminale Analisi":
+    uploaded_file = st.file_uploader(
+        "Carica una radiografia",
+        type=['png', 'jpg', 'jpeg'],
+        help="Puoi trascinare il file direttamente qui o cliccare per selezionarlo dal tuo dispositivo."
+    )
+
     if not uploaded_file:
         st.markdown("""
             <div style="text-align: center; padding: 4rem 2rem;">
                 <img src="https://img.icons8.com/ink/color/96/lungs.png" width="100" style="opacity: 0.5; filter: grayscale(100%); margin-bottom: 20px;">
                 <h2 style="color: #94a3b8;">Nessuna Radiografia Caricata</h2>
-                <p style="color: #64748b; margin-top: 10px;">Utilizza il pannello laterale per caricare un'immagine RX ed avviare l'analisi.</p>
+                <p style="color: #64748b; margin-top: 10px;">Caricare un'immagine RX per avviare l'analisi.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -317,7 +286,7 @@ if nav_page == "Terminale Analisi":
                         st.rerun()
 
             # Image Preview Tabs
-            img_tabs = st.tabs(["Rilevamenti AI", "Migliorata", "Originale"])
+            img_tabs = st.tabs(["Rilevamenti YOLO", "Immagine migliorata", "Immagine originale"])
             with img_tabs[0]:
                 st.image(yolo_img, width="stretch", caption=f"{len(detections)} anomalie identificate")
             with img_tabs[1]:
