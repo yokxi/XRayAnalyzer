@@ -238,3 +238,65 @@ LOADING_HTML = """
     <div class="loader-subtext">Caricamento modelli neurali e pipeline diagnostica...</div>
 </div>
 """
+
+# Timeline Step Template
+TIMELINE_STEP_TEMPLATE = """
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+    <i class="fa-solid {icon}" style="font-size: 1.2rem; color: #60a5fa;"></i>
+    <strong style="color: #ffffff; font-size: 1.05rem;">{title}</strong>
+    <span style="margin-left: auto; background: #dcfce7; color: #166534;
+                 padding: 3px 10px; border-radius: 10px; font-size: 0.75rem;">
+        <i class="fa-solid fa-check"></i> Completato
+    </span>
+</div>
+<div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; line-height: 1.7;">
+    {content}
+</div>
+"""
+
+# Timeline Active Step Template
+TIMELINE_ACTIVE_TEMPLATE = """
+<div style="margin-top: 10px; border: 1px solid #3b82f6; border-radius: 12px; overflow: hidden;">
+    <div style="background: rgba(59, 130, 246, 0.1); padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+        <div class="analyzing-spinner" style="width: 16px; height: 16px;"></div>
+        <strong style="color: #93c5fd;">{title}</strong>
+    </div>
+    <div style="padding: 16px; background: rgba(30, 41, 59, 0.5);">
+        <p style="color: #94a3b8; font-style: italic; margin: 0;">Analisi in corso...</p>
+    </div>
+</div>
+"""
+
+# Metric Card Template
+METRIC_CARD_TEMPLATE = """
+<div style="background: {bg}; padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <i class="fa-solid {icon}" style="font-size: 1.5rem; margin-bottom: 10px; color: {icon_color}; display: block;"></i>
+    <p style="margin: 0; font-size: 0.8rem; color: #475569;">{label}</p>
+    <h3 style="margin: 0; color: #1e293b;">{val}</h3>
+</div>
+"""
+
+# Result Badge Template
+RESULT_BADGE_TEMPLATE = """
+<div class="">
+    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Diagnosi Primaria</p>
+    <div class="status-badge {diag_class}">
+        <i class="fa-solid {diag_icon}"></i> {diag_text}
+    </div>
+    <div style="margin-top: 20px;">
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Punteggio di Confidenza</p>
+        <h2 style="margin: 0; font-weight: 700;">{conf:.1f}%</h2>
+        <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 8px;">
+            <div style="background: {bar_color}; width: {conf}%; height: 100%; border-radius: 4px;"></div>
+        </div>
+    </div>
+    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Anomalie Focali</p>
+            <h4 style="margin: 0;">{num_detections} Aree</h4>
+        </div>
+        <i class="fa-solid fa-microscope" style="color: #cbd5e1; font-size: 1.5rem;"></i>
+    </div>
+</div>
+"""

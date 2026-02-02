@@ -14,7 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-from src.ui.styles import EXTERNAL_LINKS, MAIN_STYLES, SPINNER_CSS, SIDEBAR_HEADER, LOADING_HTML
+from src.ui.styles import (
+    EXTERNAL_LINKS, MAIN_STYLES, SPINNER_CSS, SIDEBAR_HEADER, LOADING_HTML,
+    TIMELINE_STEP_TEMPLATE, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
+)
 
 # Load External Resources (Font Awesome & Google Fonts)
 st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
@@ -48,26 +51,19 @@ def show_reasoning_modal(reasoning_data):
 
     for tab, step in zip(tabs, steps):
         with tab:
-            st.markdown(f"""
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                    <i class="fa-solid {step['icon']}" style="font-size: 1.5rem; color: #60a5fa;"></i>
-                    <h3 style="margin: 0; color: #ffffff;">{step['title']}</h3>
-                </div>
-            """, unsafe_allow_html=True)
-
-            st.markdown(f"""
-                <div style="background: rgba(255,255,255,0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; line-height: 1.7;">
-                    {step['content']}
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(TIMELINE_STEP_TEMPLATE.format(
+                icon=step['icon'],
+                title=step['title'],
+                content=step['content']
+            ), unsafe_allow_html=True)
 
             if step.get('image') is not None:
                 st.image(step['image'], caption="Area analizzata", width=300)
 
 
-@st.dialog("Ragionamento Diagnostico AI", width="large")
+@st.dialog("Analisi in Corso...", width="large")
 def show_live_reasoning_modal(pipeline_generator, file_name):
-    """Modale che mostra il ragionamento in tempo reale con tabs."""
+    """Modale che mostra il ragionamento in tempo reale con Timeline Verticale."""
     completed_steps = []
     processed_img = None
     detections = []
@@ -76,10 +72,10 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
     # Spinner CSS
     st.markdown(SPINNER_CSS, unsafe_allow_html=True)
 
-    tabs_placeholder = st.empty()
-    status_placeholder = st.empty()
+    # Main container for the timeline
+    timeline_placeholder = st.empty()
 
-    # Track next step info for "Analizzando..." tab
+    # Track next step info for "Analizzando..."
     next_step_title = "Elaborazione Visiva"
     next_step_icon = "fa-eye"
     step_count = 0
@@ -121,7 +117,7 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
                 next_step_title = f"Analisi Area 1/{len(detections)}"
                 next_step_icon = "fa-bullseye"
             elif cls_data and cls_data['is_positive']:
-                next_step_title = "Analisi Opacita Diffusa"
+                next_step_title = "Analisi Opacità Diffusa"
                 next_step_icon = "fa-cloud"
             else:
                 next_step_title = None  # No more steps
@@ -133,57 +129,35 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
             else:
                 next_step_title = None
 
-        # Build tabs: completed steps + "Analizzando..." tab for next step
-        with tabs_placeholder.container():
-            tab_titles = [s['title'][:20] + "..." if len(s['title']) > 20 else s['title'] for s in completed_steps]
-            if next_step_title:
-                tab_titles.append(f"{next_step_title[:18]}...")
-
-            tabs = st.tabs(tab_titles)
-
-            # Render completed steps
-            for i, (tab, s) in enumerate(zip(tabs[:len(completed_steps)], completed_steps)):
-                with tab:
-                    st.markdown(f"""
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                            <i class="fa-solid {s['icon']}" style="font-size: 1.2rem; color: #60a5fa;"></i>
-                            <strong style="color: #ffffff; font-size: 1.05rem;">{s['title']}</strong>
-                            <span style="margin-left: auto; background: #dcfce7; color: #166534;
-                                         padding: 3px 10px; border-radius: 10px; font-size: 0.75rem;">
-                                <i class="fa-solid fa-check"></i> Completato
-                            </span>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px;
-                                    border: 1px solid rgba(255,255,255,0.2); color: #e2e8f0; line-height: 1.7;">
-                            {s['content']}
-                        </div>
-                    """, unsafe_allow_html=True)
+        # Re-render the full timeline
+        with timeline_placeholder.container():
+            for s in completed_steps:
+                with st.expander(f"{s['title']}", expanded=False):
+                    st.markdown(TIMELINE_STEP_TEMPLATE.format(
+                        icon=s['icon'],
+                        title=s['title'],
+                        content=s['content']
+                    ), unsafe_allow_html=True)
 
                     if s.get('image') is not None:
                         st.image(s['image'], caption="Area analizzata", width=280)
 
-            # Render "Analizzando..." tab for next step
-            if next_step_title and len(tabs) > len(completed_steps):
-                with tabs[len(completed_steps)]:
-                    st.markdown(f"""
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                            <i class="fa-solid {next_step_icon}" style="font-size: 1.2rem; color: #94a3b8;"></i>
-                            <strong style="color: #cbd5e1; font-size: 1.05rem;">{next_step_title}</strong>
-                            <span style="margin-left: auto; background: rgba(59,130,246,0.2); color: #60a5fa;
-                                         padding: 3px 10px; border-radius: 10px; font-size: 0.75rem;">
-                                <span class="analyzing-spinner"></span> In corso
-                            </span>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 10px;
-                                    border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; text-align: center;">
-                            <div class="analyzing-spinner" style="width: 24px; height: 24px; margin: 0 auto 12px;"></div>
-                            <p style="margin: 0;">Analizzando...</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+            # Render "Active" step
+            if next_step_title:
+                 st.markdown(TIMELINE_ACTIVE_TEMPLATE.format(
+                     title=next_step_title
+                 ), unsafe_allow_html=True)
 
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown(SIDEBAR_HEADER, unsafe_allow_html=True)
+
+    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">MENU</p>', unsafe_allow_html=True)
+    nav_page = st.radio(
+        "Navigazione",
+        ["Terminale Analisi", "Archivio", "Performance"],
+        label_visibility="collapsed"
+    )
 
     st.divider()
 
@@ -196,35 +170,22 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b;">PIPELINE DI SISTEMA</p>', unsafe_allow_html=True)
+    # File Uploader in Sidebar (Persistent)
+    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b;">IMPORTA RADIOGRAFIA</p>', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader(
+        "Carica CXR",
+        type=['png', 'jpg', 'jpeg'],
+        label_visibility="collapsed",
+        help="Carica una radiografia per avviare l'analisi."
+    )
 
-    with st.expander("Fase 1: Miglioramento Digitale"):
-        st.markdown("""
-            <i class="fa-solid fa-wand-magic-sparkles" style="color: #2563eb;"></i>
-            **Normalizzazione CLAHE**<br>
-            Ottimizza il contrasto locale per rivelare infiltrati sottili e strutture polmonari.
-        """, unsafe_allow_html=True)
+    st.divider()
 
-    with st.expander("Fase 2: Classificazione Deep"):
-        st.markdown("""
-            <i class="fa-solid fa-brain" style="color: #2563eb;"></i>
-            **Swin-B Transformer**<br>
-            Analizza le caratteristiche semantiche globali per determinare la probabilità diagnostica.
-        """, unsafe_allow_html=True)
-
-    with st.expander("Fase 3: Rilevamento Oggetti"):
-        st.markdown("""
-            <i class="fa-solid fa-bullseye" style="color: #2563eb;"></i>
-            **Rilevamento YOLO11**<br>
-            Localizza aree sospette nello spazio con bounding box ad alta precisione.
-        """, unsafe_allow_html=True)
-
-    with st.expander("Fase 4: Ragionamento Clinico"):
-        st.markdown("""
-            <i class="fa-solid fa-comment-medical" style="color: #2563eb;"></i>
-            **LLM + RAG**<br>
-            Sintetizza i risultati della visione con basi di conoscenza medica per il report XAI.
-        """, unsafe_allow_html=True)
+    with st.expander("Pipeline di Sistema"):
+        st.markdown("**1. Miglioramento Digitale**\nCLAHE per contrasto locale.")
+        st.markdown("**2. Classificazione Deep**\nSwin-B Transformer.")
+        st.markdown("**3. Rilevamento Oggetti**\nYOLO11 per anomalie focali.")
+        st.markdown("**4. Ragionamento Clinico**\nLLM + RAG per reportistica.")
 
     st.divider()
 
@@ -232,41 +193,178 @@ with st.sidebar:
         <div style="background-color: #fefce8; padding: 1rem; border-radius: 8px; border: 1px solid #fef08a;">
             <p style="color: #854d0e; font-size: 0.8rem; margin: 0;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
-                <strong>Disclaimer Medico:</strong> Questo strumento AI è solo per supporto professionale. Consultare sempre un radiologo qualificato per la diagnosi finale.
+                <strong>Disclaimer Medico:</strong> Strumento AI per supporto professionale. Non sostituisce il parere medico.
             </p>
         </div>
     """, unsafe_allow_html=True)
 
 # --- MAIN CONTENT ---
-tab_analysis, tab_archive, tab_info = st.tabs([
-    "Terminale di Analisi",
-    "Archivio",
-    "Performance del Sistema"
-])
 
-with tab_info:
-    st.markdown("### Performance & Architettura")
-    st.markdown("I seguenti valori rappresentano le performance del modello validate sul Dataset Clinico di Test.")
+# 1. PAGE: Terminale Analisi
+if nav_page == "Terminale Analisi":
+    if not uploaded_file:
+        st.markdown("""
+            <div style="text-align: center; padding: 4rem 2rem;">
+                <img src="https://img.icons8.com/ink/color/96/lungs.png" width="100" style="opacity: 0.5; filter: grayscale(100%); margin-bottom: 20px;">
+                <h2 style="color: #94a3b8;">Nessuna Radiografia Caricata</h2>
+                <p style="color: #64748b; margin-top: 10px;">Utilizza il pannello laterale per caricare un'immagine RX ed avviare l'analisi.</p>
+            </div>
+        """, unsafe_allow_html=True)
 
-    cols = st.columns(4)
-    metrics = [
-        ("Leopoldo", "90%", "fa-check-circle", "#dcfce7", "#166534"),
-        ("Aurora", "9%", "fa-heart-pulse", "#fee2e2", "#991b1b"),
-        ("Martin", "1%", "fa-shield-halved", "#e0f2fe", "#075985"),
-    ]
+        # Reset session state when no file is uploaded
+        if 'analysis_results' in st.session_state:
+            del st.session_state.analysis_results
+        if 'current_file' in st.session_state:
+            del st.session_state.current_file
+    else:
+        # Save temporary file
+        temp_path = f"/app/temp/{uploaded_file.name}"
+        os.makedirs("/app/temp", exist_ok=True)
+        with open(temp_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
 
-    for i, (label, val, icon, bg, icon_color) in enumerate(metrics):
-        with cols[i]:
-            st.markdown(f"""
-                <div style="background: {bg}; padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <i class="fa-solid {icon}" style="font-size: 1.5rem; margin-bottom: 10px; color: {icon_color}; display: block;"></i>
-                    <p style="margin: 0; font-size: 0.8rem; color: #475569;">{label}</p>
-                    <h3 style="margin: 0; color: #1e293b;">{val}</h3>
+        # Check if we need to run the pipeline (new file or first run)
+        need_analysis = (
+            'current_file' not in st.session_state or
+            st.session_state.current_file != uploaded_file.name
+        )
+
+        # Run Pipeline if needed - show live reasoning modal
+        if need_analysis:
+            metadata = user_pos if user_pos != "Non Specificata" else None
+
+            pipeline_gen = agent.run_full_pipeline_streaming(
+                temp_path, "Analisi Clinica Completa", metadata
+            )
+
+            # Open the live reasoning modal (results are saved to session_state inside)
+            show_live_reasoning_modal(pipeline_gen, uploaded_file.name)
+
+        # Retrieve results from session state
+        if 'analysis_results' not in st.session_state:
+            st.warning("Elaborazione interrotta. Ricarica l'immagine.")
+            st.stop()
+
+        results = st.session_state.analysis_results
+        reasoning_data = results['reasoning_data']
+        processed_img = results['processed_img']
+        yolo_img = results.get('yolo_img', processed_img)
+        detections = results['detections']
+        cls_data = results['cls_data']
+
+        # Results Header
+        cls_confidence = cls_data['confidence'] * 100
+        is_positive = cls_data['is_positive']
+        header_color = "#ef4444" if is_positive else "#22c55e"
+        header_text = "Rilevata Polmonite" if is_positive else "Reperti Normali"
+
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
+                <div>
+                    <h2 style="margin: 0; color: #1e293b;">Risultati Analisi</h2>
+                    <p style="margin: 0; color: #64748b;">File: {uploaded_file.name}</p>
                 </div>
-            """, unsafe_allow_html=True)
+                <div style="text-align: right;">
+                    <span style="background: {header_color}20; color: {header_color}; padding: 5px 15px; border-radius: 20px; font-weight: 700;">
+                        {header_text}
+                    </span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
-with tab_archive:
+        # Layout for Results
+        res_col_imgs, res_col_data = st.columns([1.2, 0.8])
+
+        with res_col_imgs:
+            # Action Buttons
+            btn_col1, btn_col2, btn_col3 = st.columns(3)
+            with btn_col1:
+                if st.button("Visualizza Ragionamento", use_container_width=True, type="primary"):
+                    show_reasoning_modal(reasoning_data)
+            with btn_col2:
+                pdf_bytes = generate_pdf_report(reasoning_data, cls_data, detections)
+                st.download_button(
+                    label="Scarica PDF",
+                    data=pdf_bytes,
+                    file_name=f"report_xray_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+            with btn_col3:
+                # Archive Logic
+                uploaded_file.seek(0)
+                image_hash = compute_image_hash(uploaded_file)
+                uploaded_file.seek(0)
+                existing_archive = is_already_archived(image_hash)
+
+                if existing_archive:
+                    st.button("Archiviato ✅", use_container_width=True, disabled=True)
+                else:
+                    if st.button("Salva in Archivio", use_container_width=True):
+                        original_img = Image.open(uploaded_file)
+                        archive_id = save_analysis(
+                            filename=uploaded_file.name,
+                            original_img=original_img,
+                            processed_img=processed_img,
+                            yolo_img=yolo_img,
+                            cls_data=cls_data,
+                            detections=detections,
+                            reasoning_data=reasoning_data,
+                            metadata={"proiezione": user_pos},
+                            image_hash=image_hash
+                        )
+                        st.toast("Analisi salvata in archivio!", icon="✅")
+                        st.rerun()
+
+            # Image Preview Tabs
+            img_tabs = st.tabs(["Rilevamenti AI", "Migliorata", "Originale"])
+            with img_tabs[0]:
+                st.image(yolo_img, use_container_width=True, caption=f"{len(detections)} anomalie identificate")
+            with img_tabs[1]:
+                st.image(processed_img, use_container_width=True, caption="Immagine preprocessata (CLAHE)")
+            with img_tabs[2]:
+                st.image(uploaded_file, use_container_width=True, caption="Input originale")
+
+        with res_col_data:
+            st.markdown("#### Sintesi Diagnostica")
+
+            # Result Badge
+            st.markdown(RESULT_BADGE_TEMPLATE.format(
+                diag_class="badge-positive" if is_positive else "badge-negative",
+                diag_icon="fa-triangle-exclamation" if is_positive else "fa-circle-check",
+                diag_text=header_text.upper(),
+                conf=cls_confidence,
+                bar_color=header_color,
+                num_detections=len(detections)
+            ), unsafe_allow_html=True)
+
+            if is_positive:
+                st.error("""
+                    **Avviso Clinico Urgente:** Rilevata alta probabilità di polmonite.
+                    Si raccomanda revisione immediata del reparto pneumologia.
+                """)
+            else:
+                st.success("""
+                    **Esito:** Nessuna evidenza di consolidamenti o opacità sospette.
+                    Quadro radiologico nei limiti della norma.
+                """)
+
+# 2. PAGE: Archivio
+elif nav_page == "Archivio":
     st.markdown("### Archivio Analisi")
+
+    # Callbacks for navigation (defined globally or here works too)
+    if 'viewing_archive' not in st.session_state:
+        st.session_state.viewing_archive = None
+
+    def set_viewing_archive(archive_id):
+        st.session_state.viewing_archive = archive_id
+
+    def clear_viewing_archive():
+        st.session_state.viewing_archive = None
+
+    def delete_analysis_cb(archive_id):
+        delete_analysis(archive_id)
 
     # List saved analyses
     analyses = list_analyses()
@@ -281,9 +379,7 @@ with tab_archive:
 
             if archived:
                 # Back button
-                if st.button("← Torna all'elenco", type="secondary"):
-                    st.session_state.viewing_archive = None
-                    st.rerun()
+                st.button("← Torna all'elenco", type="secondary", on_click=clear_viewing_archive)
 
                 st.markdown(f"### {archived['filename']}")
                 st.caption(f"Analizzato il: {archived['timestamp']}")
@@ -336,22 +432,14 @@ with tab_archive:
                     diag_icon = "fa-triangle-exclamation" if is_pos else "fa-circle-check"
                     diag_text = "POSITIVO (Polmonite Rilevata)" if is_pos else "NEGATIVO (Reperti Normali)"
 
-                    st.markdown(f"""
-                        <div>
-                            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Diagnosi Primaria</p>
-                            <div class="status-badge {diag_class}">
-                                <i class="fa-solid {diag_icon}"></i> {diag_text}
-                            </div>
-                            <div style="margin-top: 20px;">
-                                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Punteggio di Confidenza</p>
-                                <h2 style="margin: 0; font-weight: 700;">{conf:.1f}%</h2>
-                            </div>
-                            <div style="margin-top: 20px;">
-                                <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Anomalie Focali</p>
-                                <h4 style="margin: 0;">{len(detections)} Aree</h4>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(RESULT_BADGE_TEMPLATE.format(
+                        diag_class=diag_class,
+                        diag_icon=diag_icon,
+                        diag_text=diag_text,
+                        conf=conf,
+                        bar_color='#ef4444' if is_pos else '#22c55e',
+                        num_detections=len(detections)
+                    ), unsafe_allow_html=True)
 
             else:
                 st.error("Analisi non trovata.")
@@ -378,170 +466,10 @@ with tab_archive:
 
                 with col3:
                     # View button
-                    if st.button("Visualizza", key=f"view_{analysis['archive_id']}", use_container_width=True):
-                        st.session_state.viewing_archive = analysis['archive_id']
-                        st.rerun()
+                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", use_container_width=True, on_click=set_viewing_archive, args=(analysis['archive_id'],))
 
                 with col4:
                     # Delete button
-                    if st.button("🗑️", key=f"del_{analysis['archive_id']}", help="Elimina"):
-                        delete_analysis(analysis['archive_id'])
-                        st.rerun()
+                    st.button("🗑️", key=f"del_{analysis['archive_id']}", help="Elimina", on_click=delete_analysis_cb, args=(analysis['archive_id'],))
 
                 st.divider()
-
-with tab_analysis:
-    st.markdown("""
-        <div class="info-box">
-            <i class="fa-solid fa-circle-info"></i>
-            <strong>Protocollo Operativo:</strong> Carica una radiografia del torace (CXR) ad alta risoluzione per avviare la pipeline diagnostica multi-fase.
-        </div>
-    """, unsafe_allow_html=True)
-
-    uploaded_file = st.file_uploader(
-        "Carica una radiografia",
-        type=['png', 'jpg', 'jpeg'],
-        help="Puoi trascinare il file direttamente qui o cliccare per selezionarlo dal tuo dispositivo."
-    )
-
-    if not uploaded_file:
-        # Reset session state when no file is uploaded
-        if 'analysis_results' in st.session_state:
-            del st.session_state.analysis_results
-        if 'current_file' in st.session_state:
-            del st.session_state.current_file
-    else:
-        # Save temporary file
-        temp_path = f"/app/temp/{uploaded_file.name}"
-        os.makedirs("/app/temp", exist_ok=True)
-        with open(temp_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-
-        st.divider()
-
-        # Check if we need to run the pipeline (new file or first run)
-        need_analysis = (
-            'current_file' not in st.session_state or
-            st.session_state.current_file != uploaded_file.name
-        )
-
-        # Run Pipeline if needed - show live reasoning modal
-        if need_analysis:
-            metadata = user_pos if user_pos != "Non Specificata" else None
-
-            pipeline_gen = agent.run_full_pipeline_streaming(
-                temp_path, "Analisi Clinica Completa", metadata
-            )
-
-            # Open the live reasoning modal (results are saved to session_state inside)
-            show_live_reasoning_modal(pipeline_gen, uploaded_file.name)
-
-        # Retrieve results from session state
-        if 'analysis_results' not in st.session_state:
-            st.warning("Nessun risultato disponibile. Ricarica la pagina.")
-            st.stop()
-
-        results = st.session_state.analysis_results
-        reasoning_data = results['reasoning_data']
-        processed_img = results['processed_img']
-        yolo_img = results.get('yolo_img', processed_img)
-        detections = results['detections']
-        cls_data = results['cls_data']
-
-        # Layout for Results (after analysis)
-        res_col_imgs, res_col_data = st.columns([1.2, 0.8])
-
-        with res_col_imgs:
-            # Buttons
-            btn_col1, btn_col2, btn_col3 = st.columns(3)
-            with btn_col1:
-                if st.button("Visualizza Ragionamento", use_container_width=True, type="primary"):
-                    show_reasoning_modal(reasoning_data)
-            with btn_col2:
-                pdf_bytes = generate_pdf_report(reasoning_data, cls_data, detections)
-                st.download_button(
-                    label="Scarica Report PDF",
-                    data=pdf_bytes,
-                    file_name=f"report_xray_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-            with btn_col3:
-                # Compute image hash and check if already archived
-                uploaded_file.seek(0)
-                image_hash = compute_image_hash(uploaded_file)
-                uploaded_file.seek(0)
-                existing_archive = is_already_archived(image_hash)
-
-                if existing_archive:
-                    st.button("Già in Archivio", use_container_width=True, disabled=True)
-                else:
-                    if st.button("Salva in Archivio", use_container_width=True):
-                        original_img = Image.open(uploaded_file)
-                        archive_id = save_analysis(
-                            filename=uploaded_file.name,
-                            original_img=original_img,
-                            processed_img=processed_img,
-                            yolo_img=yolo_img,
-                            cls_data=cls_data,
-                            detections=detections,
-                            reasoning_data=reasoning_data,
-                            metadata={"proiezione": user_pos},
-                            image_hash=image_hash
-                        )
-                        st.toast("Analisi salvata in archivio!", icon="✅")
-                        st.rerun()
-
-            # Image tabs
-            img_tabs = st.tabs(["Rilevamenti YOLO", "Analisi Processata", "Vista Originale"])
-            with img_tabs[0]:
-                _, img_col, _ = st.columns([0.1, 0.8, 0.1])
-                with img_col:
-                    st.image(yolo_img, use_container_width=True, caption=f"{len(detections)} aree rilevate")
-            with img_tabs[1]:
-                _, img_col, _ = st.columns([0.1, 0.8, 0.1])
-                with img_col:
-                    st.image(processed_img, use_container_width=True)
-            with img_tabs[2]:
-                _, img_col, _ = st.columns([0.1, 0.8, 0.1])
-                with img_col:
-                    st.image(uploaded_file, use_container_width=True)
-
-        with res_col_data:
-            st.markdown("#### Sintesi Diagnostica")
-
-            # Results Styling
-            is_pos = cls_data['is_positive']
-            conf = cls_data['confidence'] * 100
-
-            diag_class = "badge-positive" if is_pos else "badge-negative"
-            diag_icon = "fa-triangle-exclamation" if is_pos else "fa-circle-check"
-            diag_text = "POSITIVO (Polmonite Rilevata)" if is_pos else "NEGATIVO (Reperti Normali)"
-
-            st.markdown(f"""
-                <div class="">
-                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Diagnosi Primaria</p>
-                    <div class="status-badge {diag_class}">
-                        <i class="fa-solid {diag_icon}"></i> {diag_text}
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Punteggio di Confidenza</p>
-                        <h2 style="margin: 0; font-weight: 700;">{conf:.1f}%</h2>
-                        <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 8px;">
-                            <div style="background: {'#ef4444' if is_pos else '#22c55e'}; width: {conf}%; height: 100%; border-radius: 4px;"></div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Anomalie Focali</p>
-                            <h4 style="margin: 0;">{len(detections)} Aree</h4>
-                        </div>
-                        <i class="fa-solid fa-microscope" style="color: #cbd5e1; font-size: 1.5rem;"></i>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-            if is_pos:
-                st.error("""
-                    **Avviso Clinico Urgente:** Rilevata alta probabilità di polmonite. Si raccomanda revisione immediata del reparto pneumologia.
-                """)
