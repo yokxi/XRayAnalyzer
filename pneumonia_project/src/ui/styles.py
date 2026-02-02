@@ -119,6 +119,27 @@ MAIN_STYLES = """
             justify-content: center;
             font-size: 14px;
         }
+
+        /* Custom Primary Button Color */
+        div.stButton > button[kind="primary"] {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        div.stButton > button[kind="primary"]:hover {
+            background-color: #1e40af;
+            border-color: #1e40af;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.4);
+        }
+
+        div.stButton > button[kind="primary"]:focus:not(:active) {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            color: white;
+        }
     </style>
 """
 
@@ -270,10 +291,12 @@ TIMELINE_ACTIVE_TEMPLATE = """
 
 # Metric Card Template
 METRIC_CARD_TEMPLATE = """
-<div style="background: {bg}; padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-    <i class="fa-solid {icon}" style="font-size: 1.5rem; margin-bottom: 10px; color: {icon_color}; display: block;"></i>
-    <p style="margin: 0; font-size: 0.8rem; color: #475569;">{label}</p>
-    <h3 style="margin: 0; color: #1e293b;">{val}</h3>
+<div style="background-color: {color}10; border: 1px solid {color}40; padding: 1.5rem; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;">
+    <div style="background-color: {color}20; padding: 12px; border-radius: 50%; margin-bottom: 15px;">
+        <i class="fa-solid {icon}" style="font-size: 1.5rem; color: {color}; display: block;"></i>
+    </div>
+    <p style="margin: 0; font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{title}</p>
+    <h3 style="margin: 5px 0 0 0; color: #1e293b; font-size: 2rem; font-weight: 800;">{value}</h3>
 </div>
 """
 

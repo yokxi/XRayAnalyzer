@@ -264,3 +264,38 @@ def delete_analysis(archive_id):
         shutil.rmtree(analysis_dir)
         return True
     return False
+
+
+def get_performance_stats():
+    """
+    Calculate performance statistics from archived analyses.
+
+    Returns:
+        dict with total, positive, negative, avg_confidence
+    """
+    analyses = list_analyses()
+    total = len(analyses)
+
+    if total == 0:
+        return {
+            "total": 0,
+            "positive": 0,
+            "negative": 0,
+            "avg_confidence": 0.0,
+            "trend": []
+        }
+
+    positive_count = sum(1 for a in analyses if a['is_positive'])
+    negative_count = total - positive_count
+
+    # Calculate average confidence
+    total_conf = sum(a.get('confidence', 0) for a in analyses)
+    avg_conf = (total_conf / total) * 100 if total > 0 else 0
+
+    return {
+        "total": total,
+        "positive": positive_count,
+        "negative": negative_count,
+        "avg_confidence": avg_conf,
+        "analyses": analyses # Return raw list for potential charts
+    }

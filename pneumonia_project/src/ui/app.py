@@ -2,9 +2,11 @@ import streamlit as st
 import os
 from datetime import datetime
 from PIL import Image
+import pandas as pd
+import altair as alt
 from src.agent.brain import MedicalAgent
 from src.utils.pdf_generator import generate_pdf_report
-from src.utils.archive import save_analysis, list_analyses, load_analysis, delete_analysis, is_already_archived, compute_image_hash
+from src.utils.archive import save_analysis, list_analyses, load_analysis, delete_analysis, is_already_archived, compute_image_hash, get_performance_stats
 
 # Page Configuration
 st.set_page_config(
@@ -128,12 +130,37 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
 with st.sidebar:
     st.markdown(SIDEBAR_HEADER, unsafe_allow_html=True)
 
-    st.markdown('<p style="font-weight: 600; font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">MENU</p>', unsafe_allow_html=True)
-    nav_page = st.radio(
-        "Navigazione",
-        ["Terminale Analisi", "Archivio", "Performance"],
-        label_visibility="collapsed"
+    # Init Navigation State
+    if "page" not in st.session_state:
+        st.session_state.page = "Terminale Analisi"
+
+    def set_page(page_name):
+        st.session_state.page = page_name
+
+    # Navigation Buttons
+    st.button(
+        "Terminale Analisi",
+        on_click=set_page,
+        args=("Terminale Analisi",),
+        type="primary" if st.session_state.page == "Terminale Analisi" else "secondary",
+        use_container_width=True
     )
+    st.button(
+        "Archivio",
+        on_click=set_page,
+        args=("Archivio",),
+        type="primary" if st.session_state.page == "Archivio" else "secondary",
+        use_container_width=True
+    )
+    st.button(
+        "Performance",
+        on_click=set_page,
+        args=("Performance",),
+        type="primary" if st.session_state.page == "Performance" else "secondary",
+        use_container_width=True
+    )
+
+    nav_page = st.session_state.page
 
     st.divider()
 
@@ -444,3 +471,68 @@ elif nav_page == "Archivio":
                     st.button("🗑️", key=f"del_{analysis['archive_id']}", help="Elimina", on_click=delete_analysis_cb, args=(analysis['archive_id'],))
 
                 st.divider()
+
+# 3. PAGE: Performance
+elif nav_page == "Performance":
+    st.markdown("### Dashboard Performance AI")
+
+    stats = get_performance_stats()
+
+    if stats['total'] == 0:
+        st.info("Nessun dato disponibile. Salva delle analisi nell'archivio per popolare la dashboard.")
+    else:
+        # KPI ROW
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.markdown(METRIC_CARD_TEMPLATE.format(
+                title="Totale Analisi",
+                value=stats['total'],
+                icon="fa-folder-open",
+                color="#3b82f6"
+            ), unsafe_allow_html=True)
+
+        with col2:
+            st.markdown(METRIC_CARD_TEMPLATE.format(
+                title="Casi Positivi",
+                value=stats['positive'],
+                icon="fa-triangle-exclamation",
+                color="#ef4444"
+            ), unsafe_allow_html=True)
+
+        with col3:
+            st.markdown(METRIC_CARD_TEMPLATE.format(
+                title="Casi Negativi",
+                value=stats['negative'],
+                icon="fa-shield-halved",
+                color="#22c55e"
+            ), unsafe_allow_html=True)
+
+        with col4:
+            st.markdown(METRIC_CARD_TEMPLATE.format(
+                title="Confidenza Media",
+                value=f"{stats['avg_confidence']:.1f}%",
+                icon="fa-chart-line",
+                color="#8b5cf6"
+            ), unsafe_allow_html=True)
+
+        st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
+        st.markdown("#### Distribuzione Casi")
+
+        # Altair Chart for precise coloring
+        chart_data = pd.DataFrame([
+            {"Tipologia": "Polmonite (Positivi)", "Quantità": stats['positive'], "Color": "#ef4444"},
+            {"Tipologia": "Sani (Negativi)", "Quantità": stats['negative'], "Color": "#22c55e"}
+        ])
+
+        c = alt.Chart(chart_data).mark_bar().encode(
+            x=alt.X('Tipologia', sort=None, axis=alt.Axis(labelAngle=0)),
+            y='Quantità',
+            color=alt.Color('Tipologia', scale=alt.Scale(
+                domain=['Polmonite (Positivi)', 'Sani (Negativi)'],
+                range=['#ef4444', '#22c55e']
+            ), legend=None),
+            tooltip=['Tipologia', 'Quantità']
+        ).properties(height=300)
+
+        st.altair_chart(c, theme="streamlit", use_container_width=True)
