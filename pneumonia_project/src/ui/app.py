@@ -143,21 +143,21 @@ with st.sidebar:
         on_click=set_page,
         args=("Terminale Analisi",),
         type="primary" if st.session_state.page == "Terminale Analisi" else "secondary",
-        use_container_width=True
+        width="stretch"
     )
     st.button(
         "Archivio",
         on_click=set_page,
         args=("Archivio",),
         type="primary" if st.session_state.page == "Archivio" else "secondary",
-        use_container_width=True
+        width="stretch"
     )
     st.button(
         "Performance",
         on_click=set_page,
         args=("Performance",),
         type="primary" if st.session_state.page == "Performance" else "secondary",
-        use_container_width=True
+        width="stretch"
     )
 
     nav_page = st.session_state.page
@@ -532,4 +532,4 @@ elif nav_page == "Performance":
             tooltip=['Tipologia', 'Quantità']
         ).properties(height=300)
 
-        st.altair_chart(c, theme="streamlit", use_container_width=True)
+        st.altair_chart(c, theme="streamlit", width="stretch")
