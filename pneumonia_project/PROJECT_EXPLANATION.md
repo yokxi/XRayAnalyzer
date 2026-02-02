@@ -4,99 +4,115 @@ XRayAnalyzer è un sistema avanzato di supporto clinico basato su Intelligenza A
 
 ## 1. Architettura del Sistema
 
-Il progetto segue una pipeline multi-fase coordinata da un "Agente Medico". L'architettura è suddivisa in quattro componenti principali:
+Il progetto segue una pipeline multi-fase coordinata da un "Agente Medico". L'architettura è suddivisa in componenti modulari per massimizzare la manutenibilità:
 
-- **Interfaccia Utente (Streamlit)**: Frontend reattivo "Medical-Grade" con streaming dei passi di ragionamento e gestione dei tab analitici.
+- **Interfaccia Utente (Streamlit)**: Frontend reattivo "Medical-Grade" con streaming dei passi di ragionamento e gestione dei tab analitici. Utilizza stili centralizzati in `src/ui/styles.py`.
 - **Agente di Ragionamento (`MedicalAgent`)**: L'orchestratore che gestisce il flusso di dati in streaming e la logica di arbitrato tra modelli.
-- **Strumenti Specialistici (`VisionTool`, `RagTool`)**: Modelli di visione per l'analisi e localizzazione, e base di conoscenza vettoriale per il supporto clinico.
-- **Sottosistema di Persistenza & Reportistica**: Modulo `Archive` per la memorizzazione storica delle analisi e `PDFGenerator` per la creazione di report clinici ufficiali.
+- **Strumenti Specialistici (`VisionTool`, `RagTool`)**: Modelli di visione per l'analisi e localizzazione (Swin-B + YOLO Ensemble), e base di conoscenza vettoriale (ChromaDB).
+- **Dashboard Performance**: Modulo per il calcolo in tempo reale di KPI e visualizzazione analitica.
 
 ---
 
-## 2. Pipeline di Analisi Passo-Passo (Streaming Mode)
+## 2. Punti Chiave per l'Esposizione (Highlight)
 
-A differenza dei sistemi tradizionali, XRayAnalyzer utilizza una pipeline **streaming** che permette al clinico di osservare il processo decisionale dell'IA mentre avviene.
+Se dovessi presentare il progetto, questi sono i 3 pilastri fondamentali:
+
+1.  **Trasparenza (XAI)**: Il sistema non è una "scatola nera". Grazie allo streaming dei passi di ragionamento, il medico vede _perché_ l'AI ha preso una decisione.
+2.  **Affidabilità tramite Ensemble**: La fusione di 3 modelli diversi (Swin per il globale, 2 YOLO per il locale) riduce drasticamente i margini di errore rispetto a un modello singolo.
+3.  **User Experience Clinica**: Dalla schermata di caricamento "respirante" al report PDF ufficiale, ogni dettaglio è pensato per integrarsi in un flusso di lavoro ospedaliero reale.
+
+---
+
+## 3. Pipeline di Analisi Passo-Passo (Streaming Mode)
+
+Il sistema permette al clinico di osservare il processo decisionale dell'IA in tempo reale.
+
+### Fase 0: Inizializzazione & Medical Loading
+
+All'avvio o durante il caricamento dei modelli, viene visualizzata una schermata tematica con animazione respiratoria dei polmoni e scanner laser verticale per fornire feedback immediato sulla reattività del sistema.
 
 ### Fase 1: Ottimizzazione e Classificazione (Vision Init)
 
 - **CLAHE**: L'immagine viene normalizzata per migliorare il contrasto locale.
-- **Ensemble Vision**: Il sistema utilizza una combinazione di due modelli allo stato dell'arte: **Swin-B Transformer** per la classificazione globale e un **Ensemble di YOLOv10 + YOLOv11** per la localizzazione precisa delle anomalie focali.
-- **Risultato**: Viene calcolato un punteggio di confidenza iniziale e mappate le aree di interesse.
+- **Ensemble Vision**: Utilizzo di **Swin-B Transformer** (classificazione globale) ed Ensemble **YOLOv10 + YOLOv11** (localizzazione).
+- **TTA (Test Time Augmentation)**: Opzionale per aumentare la precisione nella localizzazione delle opacità.
 
 ### Fase 2: Analisi Tecnica e Proiezione
 
-- In questa fase l'LLM, supportato dal RAG, analizza la qualità dell'immagine e la proiezione (AP/PA).
-- Il sistema incrocia i metadati dichiarati dall'utente (es. proiezione specificata nella sidebar) con l'evidenza visiva per validare la correttezza del posizionamento del paziente.
+- L'LLM analizza la qualità dell'immagine e la proiezione (AP/PA).
+- Cross-check tra metadati utente ed evidenza visiva per validare il posizionamento.
 
 ### Fase 3: Analisi Arbitrata per Aree Focali
 
-Se l'Ensemble YOLO rileva anomalie (bounding boxes), l'Agente attiva un'analisi specifica per ogni area:
+Se YOLO rileva anomalie:
 
-1. **Extraction & Fusion**: Le rilevazioni di YOLOv10 e YOLOv11 vengono fuse tramite **Weighted Box Fusion (WBF)** per ridurre i falsi positivi.
-2. **Crop Extraction**: Viene estratto un ritaglio ad alta risoluzione dell'area sospetta.
-3. **RAG Validation**: Si interrogano i manuali medici per ottenere criteri di validazione per quella specifica zona anatomica.
-4. **Arbitrato**: L'LLM funge da arbitro. Se il classificatore globale è negativo ma l'Ensemble YOLO è positivo, l'LLM viene istruito con un "Critical Alert" per verificare se si tratti di una falsa rilevazione (es. artefatto osseo) o di una polmonite incipiente.
+1. **Extraction & Fusion**: Fusione delle rilevazioni tramite **Weighted Box Fusion (WBF)**.
+2. **Crop Extraction**: Estrazione di ritagli ad alta risoluzione 1024px.
+3. **RAG Validation**: Consultazione della base di conoscenza clinica per i criteri diagnostici.
+4. **Arbitrato**: L'LLM valida l'area per confermare la polmonite o escludere artefatti (es. scapole, calcificazioni).
 
 ### Fase 4: Analisi delle Opacità Diffuse (Fallback)
 
-Se il classificatore globale rileva polmonite ma non ci sono box YOLO focali, il sistema attiva un'analisi per cercare segni di **velatura diffusa** o pattern interstiziali che non occupano un'area geometrica definita.
+Se il classificatore globale è positivo ma YOLO non trova box, l'Agente cerca segni di **velatura diffusa** o pattern interstiziali non focalizzati.
 
-### Fase 5: Sintesi Finale e Generazione Report
+### Fase 5: Sintesi Finale e Diagnosi
 
-Tutti i passi di ragionamento vengono sintetizzati in un report XAI coerente. L'utente può quindi:
+Generazione del report XAI comprensivo di:
 
-- Visualizzare il ragionamento completo nel modale dedicato.
-- Generare un **Report PDF** con timbro temporale e metadati.
-- **Salvare in Archivio** l'analisi (con gestione automatica dei duplicati tramite hash MD5).
+- **Punteggio di Confidenza** e Anomalie Focali.
+- **Livello di Gravità**: Calcolato dinamicamente (Alta/Moderata/Bassa).
+- **Qualità Scansione**: Indicatori sulla risoluzione del reperto.
 
 ---
 
-## 3. Classi e Metodi Principali
+## 4. Dashboard Performance AI
+
+Monitoraggio delle prestazioni basato sull'archivio storico:
+
+- **KPI Cards**: Totale analisi, Casi Positivi/Negativi, Confidenza Media.
+- **Visual Analytics**: Grafici Altair color-coded (Red/Green) per la distribuzione dei casi diagnostici.
+
+---
+
+## 5. Classi e Metodi Principali
 
 ### `MedicalAgent` (src/agent/brain.py)
 
-- `run_full_pipeline_streaming(...)`: Metodo generatore (yield) che gestisce il flusso asincrono dei dati verso la UI.
-- `call_hpc(...)`: Gestisce la comunicazione multimodale con il server di calcolo (Qwen-VL-72B).
+- `run_full_pipeline_streaming(...)`: Metodo generatore che gestisce il flusso asincrono verso la UI.
+- `call_hpc(...)`: Gestisce la comunicazione multimodale (Qwen-VL-72B).
 
-### Utilities di Archiviazione (`src/utils/archive.py`)
+### `Archive` (src/utils/archive.py)
 
-- Gestisce il database locale delle analisi tramite un sistema di file strutturato.
-- `compute_image_hash()`: Previene il salvataggio duplicato della stessa immagine.
-- Serializzazione JSON per i metadati e PNG per i risultati visivi (originale, processata, YOLO crops).
+- Gestione database locale strutturato.
+- `compute_image_hash()`: Previene duplicati tramite MD5 dell'immagine originale.
+- Serializzazione completa dei metadati e delle immagini di ragionamento (crops).
 
 ### `PDFGenerator` (src/utils/pdf_generator.py)
 
-- Utilizza `FPDF` per creare un documento clinico strutturato.
-- Include sintesi diagnostica color-coded, passi di ragionamento e disclaimer medico.
+- Generazione dinamica PDF con `FPDF`.
+- Include sintesi diagnostica, passi di ragionamento e disclaimer medico.
 
 ---
 
-## 4. Specifiche Tecniche per Esperti (Q&A Ready)
+## 6. Specifiche Tecniche per Esperti (Q&A)
 
-**Q: Come viene gestita la discordanza tra Swin-B (globale) e YOLO (locale)?**
+**Q: Come viene gestita la discordanza tra Swin-B e YOLO?**
 
-- **Risposta**: Attraverso la **Logica di Arbitrato**. Se YOLO trova un'anomalia che il classificatore globale non ritiene patologica, l'Agente passa un prompt di "sfida" all'LLM multimodale, chiedendogli di validare specificamente il ritaglio (crop) dell'area per escludere artefatti comuni (es. scapole sovrapposte, calcificazioni costali).
-
-**Q: Quali sono i vantaggi della pipeline di streaming?**
-
-- **Risposta**: Trasparenza e fiducia clinica. Il radiologo non riceve solo un "Sì/No", ma può seguire il "filo del pensiero" dell'IA mentre analizza la qualità dell'immagine, consulta la base di conoscenza e valida ogni singola lesione individuata.
+- **Risposta**: Tramite **Logica di Arbitrato**. L'Agente sfida l'LLM multimodale a validare i ritagli YOLO se il classificatore globale differisce, riducendo i falsi positivi da artefatti ossei.
 
 **Q: Come garantite l'integrità dei dati salvati?**
 
-- **Risposta**: Ogni analisi salvata nell'archivio è legata a un hash MD5 dell'immagine originale. Se un utente prova a salvare nuovamente la stessa immagine, il sistema lo rileva e impedisce la duplicazione, mantenendo l'archivio pulito e coerente.
+- **Risposta**: Ogni analisi è legata all'hash MD5 dell'RX. Caricando la stessa immagine, il sistema recupera l'analisi esistente invece di duplicarla.
 
-**Q: Quali sono i parametri di "stabilità" dell'LLM?**
+**Q: Come viene ottimizzata la latenza LLM?**
 
-- **Risposta**: Usiamo una **Temperature di 0.1** per massimizzare la precisione tecnica e ridurre le allucinazioni. Inoltre, il prompt include vincoli rigorosi di formattazione in markdown per garantire che tutte le fasi vengano visualizzate correttamente nella UI.
+- **Risposta**: Le immagini vengono ridimensionate proporzionalmente a 1024px prima del caricamento, garantendo il miglior bilanciamento tra dettaglio diagnostico e velocità di risposta.
 
 ---
 
-## 5. Tecnologie Utilizzate
+## 7. Tecnologie Utilizzate
 
-- **Visione Profonda**: PyTorch, Ultralytics YOLOv11 + YOLOv10 (1024px input), Swin Transformer-B.
-- **RAG & Knowledge Base**: ChromaDB (persistente), FastEmbed (E5-large), LangChain.
-- **LLM Core**: Qwen-VL-72B gestito via protocollo OpenAI-compatible.
-- **Backend & Logica**: Python 3.12, OpenCV (CLAHE).
-- **Frontend**: Streamlit 1.41+ con CSS custom, Google Fonts (Outfit) e Font Awesome 6.
-- **Reportistica**: FPDF library per la generazione dinamica di PDF.
-- **Storage**: JSON + File System strutturato per l'archiviazione (Persistence Layer).
+- **Vision Core**: Swin Transformer-B, YOLOv11 (L), YOLOv10 (L).
+- **Intelligence**: Qwen-VL-72B (Multimodal reasoning), ChromaDB (RAG).
+- **Frontend**: Streamlit 1.41+ (Custom Theme #1d4ed8), Altair Charts.
+- **Backend**: Python 3.12, PyTorch, OpenCV, FPDF.
