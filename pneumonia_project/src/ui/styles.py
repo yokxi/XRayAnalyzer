@@ -142,7 +142,7 @@ SPINNER_CSS = """
 
 SIDEBAR_HEADER = """
     <div style="text-align: center; margin-bottom: 1.5rem;">
-        <img src="https://img.icons8.com/ink/color/96/lungs.png" width="60">
+        <img src="https://img.icons8.com/ink/color/96/lungs.png" width="60" style="filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.6));">
         <h1 style="margin-top: 8px; font-weight: 700; font-size: 1.6rem;
                    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -152,4 +152,89 @@ SIDEBAR_HEADER = """
             Motore di Ragionamento Clinico
         </p>
     </div>
+"""
+
+# Custom Loading Screen
+LOADING_HTML = """
+<style>
+    .loader-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 70vh;
+        width: 100%;
+        background: transparent;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .scanner-box {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 2rem;
+    }
+
+    .lung-icon {
+        width: 100%;
+        height: 100%;
+        opacity: 0.8;
+        filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.5));
+    }
+
+    .scan-line {
+        position: absolute;
+        top: 0;
+        left: -10%;
+        width: 120%;
+        height: 4px;
+        background: #00f2fe;
+        box-shadow: 0 0 15px #00f2fe, 0 0 5px #4facfe;
+        animation: scan 2s ease-in-out infinite;
+        border-radius: 50%;
+        opacity: 0.8;
+    }
+
+    @keyframes scan {
+        0% { top: 0%; opacity: 0; }
+        15% { opacity: 1; }
+        50% { top: 100%; }
+        85% { opacity: 1; }
+        100% { top: 0%; opacity: 0; }
+    }
+
+    .loader-text {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e293b;
+        letter-spacing: 1px;
+        margin-top: 10px;
+        background: linear-gradient(90deg, #2563eb, #00f2fe, #2563eb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 200% auto;
+        animation: shine 3s linear infinite;
+    }
+
+    .loader-subtext {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 8px;
+    }
+
+    @keyframes shine {
+        to {
+            background-position: 200% center;
+        }
+    }
+</style>
+
+<div class="loader-container">
+    <div class="scanner-box">
+        <img src="https://img.icons8.com/ink/color/96/lungs.png" class="lung-icon">
+        <div class="scan-line"></div>
+    </div>
+    <div class="loader-text">INIZIALIZZAZIONE SISTEMI</div>
+    <div class="loader-subtext">Caricamento modelli neurali e pipeline diagnostica...</div>
+</div>
 """

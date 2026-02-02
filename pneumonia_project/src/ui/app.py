@@ -14,17 +14,28 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-from src.ui.styles import EXTERNAL_LINKS, MAIN_STYLES, SPINNER_CSS, SIDEBAR_HEADER
+from src.ui.styles import EXTERNAL_LINKS, MAIN_STYLES, SPINNER_CSS, SIDEBAR_HEADER, LOADING_HTML
 
 # Load External Resources (Font Awesome & Google Fonts)
 st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 
 # Agent Caching
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def load_medical_agent():
     return MedicalAgent()
 
-agent = load_medical_agent()
+if "agent" not in st.session_state:
+    # Custom Loading Screen
+    placeholder = st.empty()
+    placeholder.markdown(LOADING_HTML, unsafe_allow_html=True)
+
+    # Load Model
+    st.session_state.agent = load_medical_agent()
+
+    # Clear Loader
+    placeholder.empty()
+
+agent = st.session_state.agent
 
 # --- REASONING MODAL (Static - for viewing completed results) ---
 @st.dialog("Ragionamento Diagnostico AI", width="large")
