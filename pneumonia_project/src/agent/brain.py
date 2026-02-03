@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import io
+from PIL import Image
 from openai import OpenAI
 from src import config
 from src.tools.vision import VisionTool
@@ -48,13 +49,10 @@ class MedicalAgent:
 
     def run_full_pipeline_streaming(self, image_path, user_query, user_metadata=None):
         """
-        Generator that yields each reasoning step as it completes.
-        Yields: (step_data, is_final, final_data)
-        - step_data: the current step dict
-        - is_final: True if this is the last yield with complete results
-        - final_data: (reasoning_data, clahe_img, yolo_img, detections, cls_data) only on final yield
+        Workflow ibrido: Visione Artificiale (Swin+YOLO) seguita da Ragionamento Clinico (GPT-4o).
+        Lo streaming permette alla UI di mostrare i progressi intermedi man mano che i modelli rispondono.
         """
-        # 1. Vision Analysis (Swin-B + YOLO)
+        # Analisi computerizzata iniziale per identificare anomalie focali e stato globale
         cls_data, detections, clahe_img, yolo_img = self.vision.analyze(image_path)
 
         reasoning_steps = []
@@ -92,8 +90,8 @@ class MedicalAgent:
             "status": "complete"
         }, False, (None, clahe_img, yolo_img, detections, cls_data)
 
-        # --- STEP 1: ANALISI TECNICA (Immagine Intera) ---
-        rag_tech = self.rag.search("protocollo riconoscimento proiezione AP PA", k=2)
+        # Analisi Tecnica: Verifica la qualità dell'immagine e la proiezione RX tramite HPC
+        rag_tech = self.rag.search("protocollo recognition proiezione AP PA", k=2)
         tech_prompt = prompts.TECH_ANALYSIS_PROMPT.format(
             rag_tech=rag_tech,
             user_metadata=user_metadata if user_metadata else 'No specific metadata provided'
@@ -111,7 +109,7 @@ class MedicalAgent:
         full_reasoning += f"### 1. Analisi Tecnica e Posizionamento\n{tech_analysis}\n\n"
         yield step, False, None
 
-        # --- STEP 2: ANALISI ARBITRATA (Per ogni box YOLO) ---
+        # Analisi Arbitrata: GPT-4o valida ogni area sospetta segnalata da YOLO, agendo da radiologo esperto
         if len(detections) > 0:
             for i, det in enumerate(detections):
                 rag_context = self.rag.search(f"validazione {det['location_text']} {det['diagnosis']}", k=3)

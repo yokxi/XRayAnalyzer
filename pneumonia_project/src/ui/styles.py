@@ -1,5 +1,4 @@
 
-# Main CSS
 MAIN_STYLES = """
     <style>
         /* Global Styles */
@@ -12,13 +11,13 @@ MAIN_STYLES = """
             background-color: #f8fafc;
         }
 
-        /* Reduce top padding */
+        /* Impostazioni layout contenitore principale */
         .block-container {
             padding-top: 1rem;
             padding-bottom: 5rem;
         }
 
-        /* Typography */
+        /* Reset header anchor visibility */
         h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
             display: none !important;
         }
@@ -42,7 +41,7 @@ MAIN_STYLES = """
             font-weight: 400;
         }
 
-        /* Cards & Containers */
+        /* Sidebar and Sidebar card adjustments */
         .st-emotion-cache-1r6slb0 { /* Sidebar container */
             background-color: #ffffff;
             border-right: 1px solid #e2e8f0;
@@ -100,7 +99,7 @@ MAIN_STYLES = """
         footer {visibility: hidden;}
         [data-testid="stHeader"] {background: transparent;}
 
-        /* Custom Progress Bar Style */
+        /* Step Progress Visualization Styles */
         .progress-step {
             display: flex;
             align-items: center;
@@ -130,7 +129,7 @@ MAIN_STYLES = """
             font-size: 14px;
         }
 
-        /* Custom Primary Button Color */
+        /* Override Streamlit Primary Button Style */
         div.stButton > button[kind="primary"] {
             background-color: #1d4ed8;
             border-color: #1d4ed8;
@@ -151,7 +150,7 @@ MAIN_STYLES = """
             color: white;
         }
 
-        /* Custom Tab Styling */
+        /* Tab Navigation Overrides */
         div[data-baseweb="tab-list"] button[aria-selected="true"] {
              color: #1d4ed8 !important;
              background-color: transparent !important;
@@ -164,10 +163,24 @@ MAIN_STYLES = """
         div[data-baseweb="tab-list"] button:hover {
             color: #1d4ed8 !important;
         }
+
+        /* Markdown Blockquote styling for reasoning output */
+        blockquote {
+            border-left: 3px solid #60a5fa !important;
+            background: transparent !important;
+            padding: 5px 20px !important;
+            margin: 15px 0 !important;
+            color: #cbd5e1 !important;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        blockquote p {
+            margin-bottom: 0.8rem;
+        }
     </style>
 """
 
-# HTML Fragments
 EXTERNAL_LINKS = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -199,7 +212,6 @@ SIDEBAR_HEADER = """
     </div>
 """
 
-# Custom Loading Screen
 LOADING_HTML = """
 <style>
     .loader-container {
@@ -279,7 +291,6 @@ LOADING_HTML = """
 </div>
 """
 
-# Timeline Step Template
 TIMELINE_STEP_TEMPLATE = """
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
     <i class="fa-solid {icon}" style="font-size: 1.2rem; color: #60a5fa;"></i>
@@ -295,7 +306,17 @@ TIMELINE_STEP_TEMPLATE = """
 </div>
 """
 
-# Timeline Active Step Template
+TIMELINE_STEP_HEADER = """
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+    <i class="fa-solid {icon}" style="font-size: 1.2rem; color: #60a5fa;"></i>
+    <strong style="color: #ffffff; font-size: 1.05rem;">{title}</strong>
+    <span style="margin-left: auto; background: #dcfce7; color: #166534;
+                 padding: 3px 10px; border-radius: 10px; font-size: 0.75rem;">
+        <i class="fa-solid fa-check"></i> Completato
+    </span>
+</div>
+"""
+
 TIMELINE_ACTIVE_TEMPLATE = """
 <div style="margin-top: 10px; border: 1px solid #3b82f6; border-radius: 12px; overflow: hidden;">
     <div style="background: rgba(59, 130, 246, 0.1); padding: 12px 16px; display: flex; align-items: center; gap: 12px;">

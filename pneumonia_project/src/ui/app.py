@@ -8,7 +8,6 @@ from src.agent.brain import MedicalAgent
 from src.utils.pdf_generator import generate_pdf_report
 from src.utils.archive import save_analysis, list_analyses, load_analysis, delete_analysis, is_already_archived, compute_image_hash, get_performance_stats
 
-# Page Configuration
 st.set_page_config(
     page_title="XRayAnalyzer | Supporto Clinico AI",
     page_icon="https://img.icons8.com/ink/color/96/lungs.png",
@@ -18,10 +17,10 @@ st.set_page_config(
 
 from src.ui.styles import (
     EXTERNAL_LINKS, MAIN_STYLES, SPINNER_CSS, SIDEBAR_HEADER, LOADING_HTML,
-    TIMELINE_STEP_TEMPLATE, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
+    TIMELINE_STEP_TEMPLATE, TIMELINE_STEP_HEADER, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
 )
 
-# Load External Resources (Font Awesome & Google Fonts)
+# Integrazione stili globali e link esterni (FontAwesome/GoogleFonts)
 st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 
 # Agent Caching
@@ -29,15 +28,11 @@ st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 def load_medical_agent():
     return MedicalAgent()
 
+# Gestione persistenza dell'agente diagnostico nella sessione Streamlit
 if "agent" not in st.session_state:
-    # Custom Loading Screen
     placeholder = st.empty()
     placeholder.markdown(LOADING_HTML, unsafe_allow_html=True)
-
-    # Load Model
     st.session_state.agent = load_medical_agent()
-
-    # Clear Loader
     placeholder.empty()
 
 agent = st.session_state.agent
@@ -53,11 +48,13 @@ def show_reasoning_modal(reasoning_data):
 
     for tab, step in zip(tabs, steps):
         with tab:
-            st.markdown(TIMELINE_STEP_TEMPLATE.format(
+            st.markdown(TIMELINE_STEP_HEADER.format(
                 icon=step['icon'],
-                title=step['title'],
-                content=step['content']
+                title=step['title']
             ), unsafe_allow_html=True)
+
+            quoted_content = "\n".join([f"> {line}" for line in step['content'].split("\n")])
+            st.markdown(quoted_content)
 
             if step.get('image') is not None:
                 st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
@@ -79,8 +76,8 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
     tabs_placeholder = st.empty()
 
     for step, is_final, final_data in pipeline_generator:
+        # Se is_final è True, il generatore ha completato l'intero workflow (Vision + GPT-4o)
         if is_final:
-            # Save final results to session state
             reasoning_data_final, processed_img, yolo_img, detections, cls_data = final_data
             reasoning_data = {
                 "steps": completed_steps,
@@ -111,11 +108,13 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
                 tabs = st.tabs([s['title'] for s in completed_steps])
                 for idx, s in enumerate(completed_steps):
                     with tabs[idx]:
-                        st.markdown(TIMELINE_STEP_TEMPLATE.format(
+                        st.markdown(TIMELINE_STEP_HEADER.format(
                             icon=s['icon'],
-                            title=s['title'],
-                            content=s['content']
+                            title=s['title']
                         ), unsafe_allow_html=True)
+
+                        quoted_content = "\n".join([f"> {line}" for line in s['content'].split("\n")])
+                        st.markdown(quoted_content)
 
                         if s.get('image') is not None:
                             st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
@@ -126,11 +125,47 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
     if st.button("Chiudi e Visualizza Risultati", type="primary", width="stretch"):
         st.rerun()
 
+@st.dialog("Salva in Archivio")
+def show_save_archive_dialog(results, user_pos):
+    """Modale per rinominare e salvare l'analisi."""
+    st.markdown("Scegli un nome per identificare questa analisi nell'archivio:")
+
+    current_filename = results['current_file']
+    custom_name = st.text_input("Nome Archivio", value=current_filename)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Annulla", width="stretch", icon=":material/close:"):
+            st.rerun()
+    with col2:
+        if st.button("Salva", type="primary", width="stretch", icon=":material/save:"):
+            with st.spinner("Salvataggio in corso..."):
+                # Prepare data
+                image_hash = compute_image_hash(results['original_img'])
+
+                # Save
+                save_analysis(
+                    filename=custom_name,
+                    original_img=results['original_img'],
+                    processed_img=results['processed_img'],
+                    yolo_img=results['yolo_img'],
+                    cls_data=results['cls_data'],
+                    detections=results['detections'],
+                    reasoning_data=results['reasoning_data'],
+                    metadata={"proiezione": user_pos},
+                    image_hash=image_hash
+                )
+
+                # Update session state to show "Archiviato"
+                st.session_state.current_analysis_saved = True
+                st.toast(f"Analisi '{custom_name}' salvata!", icon=":material/check_circle:")
+                st.rerun()
+
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown(SIDEBAR_HEADER, unsafe_allow_html=True)
 
-    # Init Navigation State
+    # Navigazione basata su session_state per mantenere lo stato al refresh
     if "page" not in st.session_state:
         st.session_state.page = "Terminale Analisi"
 
@@ -197,7 +232,9 @@ if nav_page == "Terminale Analisi":
     if not uploaded_file:
         st.markdown("""
             <div style="text-align: center; padding: 4rem 2rem;">
-                <img src="https://img.icons8.com/ink/color/96/lungs.png" width="100" style="opacity: 0.5; filter: grayscale(100%); margin-bottom: 20px;">
+                <div style="font-size: 5rem; color: #94a3b8; opacity: 0.5; margin-bottom: 20px;">
+                    <i class="fa-solid fa-lungs"></i>
+                </div>
                 <h2 style="color: #94a3b8;">Nessuna Radiografia Caricata</h2>
                 <p style="color: #64748b; margin-top: 10px;">Caricare un'immagine RX per avviare l'analisi.</p>
             </div>
@@ -208,17 +245,21 @@ if nav_page == "Terminale Analisi":
             del st.session_state.analysis_results
         if 'current_file' in st.session_state:
             del st.session_state.current_file
+        if 'current_analysis_saved' in st.session_state:
+            del st.session_state.current_analysis_saved
     else:
         temp_path = f"/app/temp/{uploaded_file.name}"
 
-        # Check if we need to run the pipeline (new file or first run)
+        # Esecuzione della pipeline solo se il file è nuovo o non ancora analizzato
         need_analysis = (
             'current_file' not in st.session_state or
             st.session_state.current_file != uploaded_file.name
         )
-
-        # Run Pipeline if needed - show live reasoning modal
         if need_analysis:
+            # Reset dello stato salvataggio per la nuova analisi
+            if 'current_analysis_saved' in st.session_state:
+                del st.session_state.current_analysis_saved
+
             # Save temporary file ONLY when analysis is needed
             os.makedirs("/app/temp", exist_ok=True)
             with open(temp_path, "wb") as f:
@@ -249,12 +290,13 @@ if nav_page == "Terminale Analisi":
         detections = results['detections']
         cls_data = results['cls_data']
 
-        # Results Header
+        # Dati riassuntivi della classificazione globale
         cls_confidence = cls_data['confidence'] * 100
         is_positive = cls_data['is_positive']
         header_color = "#ef4444" if is_positive else "#22c55e"
         header_text = "Rilevata Polmonite" if is_positive else "Reperti Normali"
 
+        # Header con esito rapido basato sulla classificazione globale
         st.markdown(f"""
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
                 <div>
@@ -273,45 +315,51 @@ if nav_page == "Terminale Analisi":
         res_col_imgs, res_col_data = st.columns([1.2, 0.8])
 
         with res_col_imgs:
-            # Action Buttons
-            btn_col1, btn_col2, btn_col3 = st.columns(3)
-            with btn_col1:
-                if st.button("Visualizza Ragionamento", width="stretch", type="primary"):
+            # Action Buttons Area - Redesigned to 2 per row
+            st.markdown('<div style="margin-top: 10px; margin-bottom: 25px;">', unsafe_allow_html=True)
+
+            # Row 1: Observation and Export
+            act_col1, act_col2 = st.columns(2)
+            with act_col1:
+                if st.button("Ragionamento", width="stretch", type="primary", icon=":material/psychology_alt:"):
                     show_reasoning_modal(reasoning_data)
-            with btn_col2:
+            with act_col2:
                 pdf_bytes = generate_pdf_report(reasoning_data, cls_data, detections)
                 st.download_button(
                     label="Scarica PDF",
                     data=pdf_bytes,
                     file_name=f"report_xray_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                     mime="application/pdf",
-                    width="stretch"
+                    width="stretch",
+                    icon=":material/picture_as_pdf:"
                 )
-            with btn_col3:
-                # Archive Logic
-                uploaded_file.seek(0)
-                image_hash = compute_image_hash(uploaded_file)
-                uploaded_file.seek(0)
-                existing_archive = is_already_archived(image_hash)
 
-                if existing_archive:
-                    st.button("Archiviato ✅", width="stretch", disabled=True)
+            # Row 2: Archiving
+            st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
+            arc_col1, arc_col2 = st.columns(2)
+            with arc_col1:
+                if st.session_state.get('current_analysis_saved', False):
+                    # Show "Salva un'altra copia" as a secondary action
+                    if st.button("Salva Copia", width="stretch", icon=":material/library_add:"):
+                        show_save_archive_dialog({
+                            **results,
+                            'current_file': uploaded_file.name,
+                            'original_img': Image.open(uploaded_file)
+                        }, user_pos)
                 else:
-                    if st.button("Salva in Archivio", width="stretch"):
-                        original_img = Image.open(uploaded_file)
-                        archive_id = save_analysis(
-                            filename=uploaded_file.name,
-                            original_img=original_img,
-                            processed_img=processed_img,
-                            yolo_img=yolo_img,
-                            cls_data=cls_data,
-                            detections=detections,
-                            reasoning_data=reasoning_data,
-                            metadata={"proiezione": user_pos},
-                            image_hash=image_hash
-                        )
-                        st.toast("Analisi salvata in archivio!", icon="✅")
-                        st.rerun()
+                    if st.button("Archivia Analisi", width="stretch", type="primary", icon=":material/archive:"):
+                        show_save_archive_dialog({
+                            **results,
+                            'current_file': uploaded_file.name,
+                            'original_img': Image.open(uploaded_file)
+                        }, user_pos)
+            with arc_col2:
+                if st.session_state.get('current_analysis_saved', False):
+                    st.button("Archiviato", width="stretch", type="secondary", disabled=True, icon=":material/verified:")
+                else:
+                    st.button("Non Archiviato", width="stretch", type="secondary", disabled=True, icon=":material/history:")
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
             # Image Preview Tabs
             img_tabs = st.tabs(["Rilevamenti YOLO", "Immagine migliorata", "Immagine originale"])
@@ -325,7 +373,7 @@ if nav_page == "Terminale Analisi":
         with res_col_data:
             st.markdown("#### Sintesi Diagnostica")
 
-            # Result Badge
+            # Calcolo della severità clinica basato sulla confidenza del classificatore
             if is_positive:
                 if cls_confidence >= 80: severity_label = "Alta (Critica)"
                 elif cls_confidence >= 50: severity_label = "Moderata"
@@ -371,7 +419,6 @@ elif nav_page == "Archivio":
     def delete_analysis_cb(archive_id):
         delete_analysis(archive_id)
 
-    # List saved analyses
     analyses = list_analyses()
 
     if not analyses:
@@ -389,11 +436,10 @@ elif nav_page == "Archivio":
                 st.markdown(f"### {archived['filename']}")
                 st.caption(f"Analizzato il: {archived['timestamp']}")
 
-                # Results layout (readonly)
+                # Visualizzazione in sola lettura dei risultati archiviati
                 res_col_imgs, res_col_data = st.columns([1.2, 0.8])
 
                 with res_col_imgs:
-                    # Buttons row
                     btn1, btn2 = st.columns(2)
                     with btn1:
                         if archived.get('reasoning_data'):
@@ -414,7 +460,6 @@ elif nav_page == "Archivio":
                                 width="stretch"
                             )
 
-                    # Image tabs
                     img_tabs = st.tabs(["Rilevamenti YOLO", "Analisi Processata", "Vista Originale"])
                     with img_tabs[0]:
                         if archived.get('yolo_img'):
@@ -465,25 +510,24 @@ elif nav_page == "Archivio":
                 col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
 
                 with col1:
-                    # Filename and date
                     timestamp = analysis['timestamp'][:16].replace('T', ' ') if analysis['timestamp'] else ''
                     st.markdown(f"**{analysis['filename']}**")
                     st.caption(timestamp)
 
                 with col2:
-                    # Status badge
+                    # Status badge with Font Awesome
                     if analysis['is_positive']:
-                        st.markdown("🔴 Positivo")
+                        st.markdown('<span style="color: #ef4444;"><i class="fa-solid fa-circle-dot"></i> Positivo</span>', unsafe_allow_html=True)
                     else:
-                        st.markdown("🟢 Negativo")
+                        st.markdown('<span style="color: #22c55e;"><i class="fa-solid fa-circle-check"></i> Negativo</span>', unsafe_allow_html=True)
 
                 with col3:
                     # View button
-                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", width="stretch", on_click=set_viewing_archive, args=(analysis['archive_id'],))
+                    st.button("Visualizza", key=f"view_{analysis['archive_id']}", width="stretch", on_click=set_viewing_archive, args=(analysis['archive_id'],), icon=":material/visibility:")
 
                 with col4:
                     # Delete button
-                    st.button("🗑️", key=f"del_{analysis['archive_id']}", help="Elimina", on_click=delete_analysis_cb, args=(analysis['archive_id'],))
+                    st.button("Elimina", key=f"del_{analysis['archive_id']}", help="Elimina", on_click=delete_analysis_cb, args=(analysis['archive_id'],), icon=":material/delete:")
 
                 st.divider()
 
@@ -496,7 +540,7 @@ elif nav_page == "Performance":
     if stats['total'] == 0:
         st.info("Nessun dato disponibile. Salva delle analisi nell'archivio per popolare la dashboard.")
     else:
-        # KPI ROW
+        # Riepilogo metriche principali (KPI) dell'intero archivio
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
@@ -532,9 +576,7 @@ elif nav_page == "Performance":
             ), unsafe_allow_html=True)
 
         st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
-        st.markdown("#### Distribuzione Casi")
-
-        # Altair Chart for precise coloring
+        # Grafico di distribuzione dei casi (Positivi vs Negativi)
         chart_data = pd.DataFrame([
             {"Tipologia": "Polmonite (Positivi)", "Quantità": stats['positive'], "Color": "#ef4444"},
             {"Tipologia": "Sani (Negativi)", "Quantità": stats['negative'], "Color": "#22c55e"}
