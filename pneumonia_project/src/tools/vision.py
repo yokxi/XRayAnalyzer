@@ -25,14 +25,11 @@ import ultralytics.nn.tasks as tasks
 import ultralytics.nn.modules as modules
 tasks.MLCA = MLCA
 modules.MLCA = MLCA
-# =================================================================
-
 class VisionTool:
     def __init__(self, v10_model_path=config.YOLO10_MODEL_PATH, v11_model_path=config.YOLO11_MODEL_PATH, classifier_weights_path=config.CLASSIFIER_MODEL_PATH):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Classificatore Swin-B: Agisce come gatekeeper globale per ridurre i falsi positivi
-        print(f"Inizializzazione Swin-B SOTA da: {classifier_weights_path}")
+        # Swin-B: Classificatore globale SOTA per screening iniziale
         self.classifier = models.swin_b()
         n_inputs = self.classifier.head.in_features
         self.classifier.head = nn.Sequential(
@@ -49,8 +46,7 @@ class VisionTool:
 
         self.classifier.to(self.device).eval()
 
-        # Ensemble YOLO: v10 (bilanciato) + v11 (SOTA) per massimizzare la recall
-        print(f"Inizializzazione Ensemble YOLOv10 + YOLOv11 da: {v10_model_path} e {v11_model_path}")
+        # Ensemble YOLO: v10 + v11 per ottimizzare sensibilità e specificità
         if os.path.exists(v10_model_path) and os.path.exists(v11_model_path):
             self.yolo_v10 = YOLO(v10_model_path)
             self.yolo_v11 = YOLO(v11_model_path)
@@ -91,13 +87,14 @@ class VisionTool:
 
         return f"{depth} della {side}"
 
-    def analyze(self, image_path):
+    def run_vision_analysis(self, image_path):
+        """Pipeline di analisi completa: CLAHE -> Swin-B -> Ensemble YOLO -> WBF."""
         # Pre-processing
         raw_img = Image.open(image_path).convert('RGB')
         clahe_img = self.apply_clahe(raw_img)
         width, height = clahe_img.size
 
-        # Classificazione globale: Determina se l'immagine richiede un'analisi locale approfondita
+        # Classificazione globale: Swin-B Transformer
         input_tensor = self.classifier_transform(clahe_img).unsqueeze(0).to(self.device)
         with torch.no_grad():
             output = self.classifier(input_tensor)
@@ -177,22 +174,20 @@ class VisionTool:
         if any(len(b) > 0 for b in boxes_list):
             f_boxes, f_scores, f_labels = weighted_boxes_fusion(
                 boxes_list, scores_list, labels_list,
-                weights=[1.2, 1.0], # Diamo più peso al tuo v10 custom
-                iou_thr=0.5, skip_box_thr=0.1
+                weights=[1.5, 1.0], # Priorità al modello v10 focalizzato
+                iou_thr=0.45, skip_box_thr=0.1
             )
 
             for i, (box, score) in enumerate(zip(f_boxes, f_scores)):
-                # La confidenza finale è una media ponderata: 60% Swin-B (giudice globale) e 40% YOLO (consenso locale)
-                yolo_ensemble_contribution = score * 0.4
-                swin_contribution = swin_conf * 0.6
-                final_conf = yolo_ensemble_contribution + swin_contribution
+                # 1. Probabilistic Fusion (Logical OR): If either is very sure, final result is high
+                # Formula: 1 - ((1 - p1) * (1 - p2))
+                combined_prob = 1 - ((1 - swin_conf) * (1 - score))
 
-                print(f"\n>> Analisi Box #{i+1}:")
-                print(f"   - Score Consenso YOLO (WBF): {score:.4f} (Peso 40% -> {yolo_ensemble_contribution:.4f})")
-                print(f"   - Score Garante Swin-B:      {swin_conf:.4f} (Peso 60% -> {swin_contribution:.4f})")
-                print(f"   - CONFIDENZA FINALE COMPOSTA: {final_conf:.4f} ({(final_conf*100):.1f}%)")
+                # 2. Calibration Boost: Enfatizza i valori sopra la soglia e pulisce il rumore
+                # Sigmoide centrata su 0.4 per rendere il sistema più deciso
+                final_conf = 1 / (1 + np.exp(-12 * (combined_prob - 0.4)))
 
-                if final_conf > 0.35: # Soglia di sensibilità SOTA
+                if final_conf > 0.4: # Soglia di attivazione calibrata
                     # Riconvertiamo in pixel per crop e disegno
                     coords = [box[0]*width, box[1]*height, box[2]*width, box[3]*height]
 

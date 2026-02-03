@@ -41,7 +41,6 @@ def generate_archive_id(filename):
 
 
 def save_analysis(filename, original_img, processed_img, yolo_img, cls_data, detections, reasoning_data, metadata=None, image_hash=None):
-    """Salvataggio persistente su disco: immagini processate, crops delle anomalie e metadati JSON."""
     archive_dir = get_archive_dir()
     archive_id = generate_archive_id(filename)
     analysis_dir = archive_dir / archive_id

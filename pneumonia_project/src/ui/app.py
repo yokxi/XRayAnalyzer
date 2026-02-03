@@ -20,7 +20,6 @@ from src.ui.styles import (
     TIMELINE_STEP_TEMPLATE, TIMELINE_STEP_HEADER, TIMELINE_ACTIVE_TEMPLATE, METRIC_CARD_TEMPLATE, RESULT_BADGE_TEMPLATE
 )
 
-# Integrazione stili globali e link esterni (FontAwesome/GoogleFonts)
 st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 
 # Agent Caching
@@ -28,7 +27,6 @@ st.markdown(EXTERNAL_LINKS + MAIN_STYLES, unsafe_allow_html=True)
 def load_medical_agent():
     return MedicalAgent()
 
-# Gestione persistenza dell'agente diagnostico nella sessione Streamlit
 if "agent" not in st.session_state:
     placeholder = st.empty()
     placeholder.markdown(LOADING_HTML, unsafe_allow_html=True)
@@ -37,10 +35,8 @@ if "agent" not in st.session_state:
 
 agent = st.session_state.agent
 
-# --- REASONING MODAL (Static - for viewing completed results) ---
 @st.dialog("Ragionamento Diagnostico AI", width="large")
 def show_reasoning_modal(reasoning_data):
-    """Modale con tabs per ogni step di ragionamento (risultati completati)."""
     steps = reasoning_data["steps"]
 
     tab_titles = [f"{step['title'][:28]}..." if len(step['title']) > 28 else step['title'] for step in steps]
@@ -63,7 +59,6 @@ def show_reasoning_modal(reasoning_data):
 
 @st.dialog("Terminale di Ragionamento", width="large", dismissible=False)
 def show_live_reasoning_modal(pipeline_generator, file_name):
-    """Modale che mostra il ragionamento in tempo reale con Tabs."""
     completed_steps = []
     processed_img = None
     detections = []
@@ -91,7 +86,63 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
                 'detections': detections,
                 'cls_data': cls_data
             }
+            st.rerun() # Refresh to show results
             break
+
+        # Terminal Header
+        st.markdown(f"""
+            <div style="background: #1e293b; color: #f8fafc; padding: 12px 20px; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-terminal"></i>
+                    <span style="font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">DIAGNOSTIC_TERMINAL_V1.0.4</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div>
+                </div>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #1e293b; border-top: none; padding: 25px; border-radius: 0 0 8px 8px; min-height: 450px;">
+        """, unsafe_allow_html=True)
+
+        if not completed_steps:
+            st.markdown("""
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #475569;">
+                    <div class="spinner-modern"></div>
+                    <p style="margin-top: 20px; font-family: 'JetBrains Mono', monospace;">Inizializzazione Core Neurale...</p>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            for i, step in enumerate(completed_steps):
+                is_last = (i == len(completed_steps) - 1)
+                st.markdown(f"""
+                    <div style="margin-bottom: 25px; border-left: 2px solid {'#3b82f6' if is_last else '#1e293b'}; padding-left: 20px; position: relative;">
+                        <div style="position: absolute; left: -11px; top: 0; width: 20px; height: 20px; border-radius: 50%; background: {'#3b82f6' if is_last else '#1e293b'}; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+                            <i class="fa-solid {step['icon']}"></i>
+                        </div>
+                        <h4 style="color: #cbd5e1; font-family: 'JetBrains Mono', monospace; margin: 0 0 10px 0; font-size: 1rem;">
+                            Step {i+1}: {step['title']} {'<span style="background: #3b82f640; color: #60a5fa; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 10px;">IN CORSO</span>' if is_last else ''}
+                        </h4>
+                        <div style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6;">
+                """, unsafe_allow_html=True)
+
+                # Content as blockquote for contrast
+                quoted_content = "\n".join([f"> {line}" for line in step['content'].split("\n")])
+                st.markdown(quoted_content)
+
+                if step.get('image') is not None:
+                    if step.get('ref_image') is not None:
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.image(step['image'], caption="Area Rilevata", use_container_width=True)
+                        with col2:
+                            st.image(step['ref_image'], caption="Riferimento Atlante", use_container_width=True)
+                    else:
+                        st.image(step['image'], width=250)
+
+                st.markdown("</div></div>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
         # Get intermediate data
         if final_data and final_data[1] is not None:
@@ -99,26 +150,13 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
             yolo_img = final_data[2]
             detections = final_data[3]
             cls_data = final_data[4]
-
-        completed_steps.append(step)
-
-        # Re-render tabs
-        with tabs_placeholder.container():
-            if completed_steps:
-                tabs = st.tabs([s['title'] for s in completed_steps])
-                for idx, s in enumerate(completed_steps):
-                    with tabs[idx]:
-                        st.markdown(TIMELINE_STEP_HEADER.format(
-                            icon=s['icon'],
-                            title=s['title']
-                        ), unsafe_allow_html=True)
-
-                        quoted_content = "\n".join([f"> {line}" for line in s['content'].split("\n")])
-                        st.markdown(quoted_content)
-
-                        if s.get('image') is not None:
-                            st.markdown('<div style="margin-top: 15px;"></div>', unsafe_allow_html=True)
-                            st.image(s['image'], caption="Area analizzata", width=280)
+        if step:
+            # Update existing step if ID matches, otherwise append
+            existing_idx = next((i for i, s in enumerate(completed_steps) if s['id'] == step['id']), None)
+            if existing_idx is not None:
+                completed_steps[existing_idx] = step
+            else:
+                completed_steps.append(step)
 
     # Analysis Complete - Show Close Button
     st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
@@ -127,7 +165,6 @@ def show_live_reasoning_modal(pipeline_generator, file_name):
 
 @st.dialog("Salva in Archivio")
 def show_save_archive_dialog(results, user_pos):
-    """Modale per rinominare e salvare l'analisi."""
     st.markdown("Scegli un nome per identificare questa analisi nell'archivio:")
 
     current_filename = results['current_file']

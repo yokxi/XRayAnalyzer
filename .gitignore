@@ -55,5 +55,16 @@ pneumonia_project/archive/*
 # # ECCEZIONE: Vogliamo caricare SOLO il modello migliore (best.pt)
 # !best.pt
 
-/pneumonia_project/data/chromaDB_vector_db/*
+# ======================================
+# 7. PROGETTO XRAY ANALYZER
+# ======================================
+# Ignora il DB vettoriale (viene ricostruito da .md)
+pneumonia_project/data/chromaDB_vector_db/
+
+# Assicurati di MANTENERE l'atlante visivo (essenziale per la UI)
+!pneumonia_project/data/visual_atlas/
+
+# Ignora log e file temporanei
+pneumonia_project/temp/
+pneumonia_project/archive/
 /pneumonia_project/src/ui/testConversazione_HPC_Immagini.py

@@ -77,3 +77,22 @@ Output Format (in ITALIAN):
 """
 
 NO_FINDINGS_CONTENT = "Nessuna anomalia focale o globale rilevata dai modelli di visione. Campi polmonari apparentemente tersi."
+
+# Self-Correction / Verification Prompts
+SELF_CORRECTION_PROMPT = """
+You are a Senior Radiologist reviewing an AI-generated analysis.
+**Goal**: Ensure the analysis is clinically sound and adheres strictly to the provided Medical Protocols.
+
+**Input**:
+1. **Medical Protocols (RAG)**: {rag_context}
+2. **Current Analysis**: {generated_analysis}
+
+**Task**:
+1. Check for **HALLUCINATIONS**: Does the analysis state something that directly contradicts the Protocol?
+2. Check for **CLINICAL LOGIC**: Is the reasoning consistent with standard radiological practice?
+3. Check for **FORMAT**: Is it in Italian and following the required structure?
+
+If the analysis is CORRECT, output the word: "VERIFIED".
+If the analysis contains ERRORS, output a CORRECTED VERSION of the analysis (in Italian).
+Output ONLY "VERIFIED" or the [Corrected Analysis].
+"""

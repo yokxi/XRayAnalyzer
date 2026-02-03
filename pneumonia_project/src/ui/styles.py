@@ -11,40 +11,9 @@ MAIN_STYLES = """
             background-color: #f8fafc;
         }
 
-        /* Impostazioni layout contenitore principale */
         .block-container {
             padding-top: 1rem;
             padding-bottom: 5rem;
-        }
-
-        /* Reset header anchor visibility */
-        h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-            display: none !important;
-        }
-
-        .main-header {
-            font-size: 2.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 0.2rem;
-            letter-spacing: -0.02em;
-        }
-
-        .sub-header {
-            font-size: 1.1rem;
-            color: #64748b;
-            text-align: center;
-            margin-bottom: 2.5rem;
-            font-weight: 400;
-        }
-
-        /* Sidebar and Sidebar card adjustments */
-        .st-emotion-cache-1r6slb0 { /* Sidebar container */
-            background-color: #ffffff;
-            border-right: 1px solid #e2e8f0;
         }
 
         .glass-card {
@@ -173,10 +142,6 @@ MAIN_STYLES = """
             color: #cbd5e1 !important;
             font-size: 0.95rem;
             line-height: 1.7;
-        }
-
-        blockquote p {
-            margin-bottom: 0.8rem;
         }
     </style>
 """

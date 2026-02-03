@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import io
+import json
 from PIL import Image
 from openai import OpenAI
 from src import config
@@ -14,6 +15,26 @@ class MedicalAgent:
         self.model_name = config.HPC_MODEL_NAME
         self.vision = VisionTool()
         self.rag = RagTool()
+
+    def generate_queries(self, base_query: str) -> list:
+        """Genera varianti cliniche della query per migliorare la recall del RAG."""
+        prompt = f"""
+        Generate 3 diverse clinical search queries for a medical RAG system based on this input: "{base_query}".
+        Focus on technical synonyms, anatomical landmarks, and pathological terms.
+        Output ONLY a JSON list of strings.
+        """
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                response_format={"type": "json_object"}
+            )
+            data = json.loads(response.choices[0].message.content)
+            queries = data.get("queries", list(data.values())[0]) if isinstance(data, dict) else data
+            return queries[:3]
+        except:
+            return [base_query]
 
     def encode_image(self, pil_img):
         # Resize if too large to improve LLM latency
@@ -47,13 +68,38 @@ class MedicalAgent:
         )
         return response.choices[0].message.content
 
+    def verify_and_correct(self, generated_analysis, rag_context):
+        """Self-Correction loop: checks analysis against RAG context and corrects if needed."""
+        verify_prompt = prompts.SELF_CORRECTION_PROMPT.format(
+            rag_context=rag_context,
+            generated_analysis=generated_analysis
+        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": verify_prompt}],
+                temperature=0.0, # Zero temp for consistency
+                max_tokens=1000
+            )
+            result = response.choices[0].message.content.strip()
+
+            if "VERIFIED" in result and len(result) < 20:
+                print("[Self-RAG] Analisi verificata con successo.")
+                return generated_analysis, False
+            else:
+                print("[Self-RAG] Correzione applicata dall'Agente Senior.")
+                return result, True
+        except Exception as e:
+            print(f"[Self-RAG] Errore verifica: {e}")
+            return generated_analysis, False
+
     def run_full_pipeline_streaming(self, image_path, user_query, user_metadata=None):
         """
         Workflow ibrido: Visione Artificiale (Swin+YOLO) seguita da Ragionamento Clinico (GPT-4o).
         Lo streaming permette alla UI di mostrare i progressi intermedi man mano che i modelli rispondono.
         """
         # Analisi computerizzata iniziale per identificare anomalie focali e stato globale
-        cls_data, detections, clahe_img, yolo_img = self.vision.analyze(image_path)
+        cls_data, detections, clahe_img, yolo_img = self.vision.run_vision_analysis(image_path)
 
         reasoning_steps = []
         full_reasoning = ""
@@ -90,17 +136,42 @@ class MedicalAgent:
             "status": "complete"
         }, False, (None, clahe_img, yolo_img, detections, cls_data)
 
-        # Analisi Tecnica: Verifica la qualità dell'immagine e la proiezione RX tramite HPC
-        rag_tech = self.rag.search("protocollo recognition proiezione AP PA", k=2)
+        # 1. Analisi Tecnica: Verifica la qualità dell'immagine e la proiezione RX tramite HPC
+        # Filtro RAG: 'tecnica' per focalizzarsi su protocolli di acquisizione
+        tech_queries = self.generate_queries("protocollo recognition proiezione AP PA")
+        rag_tech = self.rag.search(tech_queries, k=3, category="tecnica")
+
+        # Yield intermediate status
+        yield {
+            "id": "tech_analysis",
+            "title": "Analisi Tecnica e Posizionamento",
+            "icon": "fa-microscope",
+            "content": "Analisi strutturale e di posizionamento in corso...",
+            "image": None
+        }, False, None
+
         tech_prompt = prompts.TECH_ANALYSIS_PROMPT.format(
             rag_tech=rag_tech,
             user_metadata=user_metadata if user_metadata else 'No specific metadata provided'
         )
         tech_analysis = self.call_hpc(tech_prompt, clahe_img)
 
+        # Yield verification status
+        yield {
+            "id": "tech_analysis",
+            "title": "Analisi Tecnica (Verifica Clinica...)",
+            "icon": "fa-shield-halved",
+            "content": tech_analysis + "\n\n*Verifica coerenza con protocollo RAG in corso...*",
+            "image": None
+        }, False, None
+
+        # Self-Correction Step
+        tech_analysis, was_corrected = self.verify_and_correct(tech_analysis, rag_tech)
+        correction_suffix = " (Verificato e Corretto)" if was_corrected else " (Verificato)"
+
         step = {
             "id": "tech_analysis",
-            "title": "Analisi Tecnica e Posizionamento",
+            "title": "Analisi Tecnica e Posizionamento" + correction_suffix,
             "icon": "fa-microscope",
             "content": tech_analysis,
             "image": None
@@ -109,14 +180,25 @@ class MedicalAgent:
         full_reasoning += f"### 1. Analisi Tecnica e Posizionamento\n{tech_analysis}\n\n"
         yield step, False, None
 
-        # Analisi Arbitrata: GPT-4o valida ogni area sospetta segnalata da YOLO, agendo da radiologo esperto
+        # Analisi Arbitrata: GPT-4o valida ogni area sospetta segnalata da YOLO
         if len(detections) > 0:
             for i, det in enumerate(detections):
-                rag_context = self.rag.search(f"validazione {det['location_text']} {det['diagnosis']}", k=3)
+                # Filtro RAG: 'anatomia' per validare i reperti focalizzati
+                det_queries = self.generate_queries(f"validazione {det['location_text']} {det['diagnosis']}")
+                rag_context = self.rag.search(det_queries, k=4, category="anatomia")
 
                 arbitrator_note = ""
                 if not cls_data['is_positive']:
                     arbitrator_note = prompts.ARBITRATOR_NOTE_NEGATIVE
+
+                # Yield intermediate status
+                yield {
+                    "id": f"detection_{i+1}",
+                    "title": f"Analisi Area: {det['location_text']}",
+                    "icon": "fa-bullseye",
+                    "content": "Validazione area sospetta tramite protocollo anatomico...",
+                    "image": det['image_crop']
+                }, False, None
 
                 det_prompt = prompts.DETECTION_ANALYSIS_PROMPT.format(
                     location_text=det['location_text'],
@@ -126,12 +208,29 @@ class MedicalAgent:
 
                 det_analysis = self.call_hpc(det_prompt, det['image_crop'])
 
+                # Yield verification status
+                yield {
+                    "id": f"detection_{i+1}",
+                    "title": f"Analisi Area {i+1} (Verifica Clinica...)",
+                    "icon": "fa-shield-halved",
+                    "content": det_analysis + "\n\n*Validazione anatomica finale...*",
+                    "image": det['image_crop']
+                }, False, None
+
+                # Self-Correction Step
+                det_analysis, was_corrected = self.verify_and_correct(det_analysis, rag_context)
+                correction_suffix = " (Verificato)" if not was_corrected else " (Verificato e Corretto)"
+
+                # Visual RAG: Cerca immagine di riferimento nell'atlante
+                ref_image = self.rag.get_visual_reference(det_analysis)
+
                 step = {
                     "id": f"detection_{i+1}",
-                    "title": f"Analisi Area: {det['location_text']}",
+                    "title": f"Analisi Area: {det['location_text']}" + correction_suffix,
                     "icon": "fa-bullseye",
                     "content": det_analysis,
-                    "image": det['image_crop']
+                    "image": det['image_crop'],
+                    "ref_image": ref_image
                 }
                 reasoning_steps.append(step)
                 full_reasoning += f"### 2.{i+1} Analisi Area: {det['location_text']}\n{det_analysis}\n\n"
