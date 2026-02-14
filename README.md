@@ -1,70 +1,80 @@
-# XRayAnalyzer 🩺
+# <p align="center">🩺 XRayAnalyzer: AI-Powered Clinical Support</p>
 
-> An AI-powered tool using Deep Learning to **detect and localize suspicious areas** in chest radiographs.
-
-This repository contains the code for **XRayAnalyzer**, a project designed to assist in medical diagnosis by **detecting and localizing potential anomalies** in chest X-rays.
-
-The primary goal is to **identify suspicious areas (e.g., nodules, opacities, or other pathologies)** that may require further medical review. This project is part of my M.Sc. in Computer Science at the University of Parma.
+<p align="center">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white" />
+  <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" />
+  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" />
+</p>
 
 ---
 
-## 🛠️ Installazione e Configurazione
+## 📖 Panoramica del Progetto
 
-Il progetto è interamente containerizzato tramite Docker per garantire la riproducibilità dell'ambiente di sviluppo, indipendentemente dal sistema operativo host.
+**XRayAnalyzer** è un sistema avanzato di supporto clinico progettato per l'analisi di radiografie del torace (CXR). Utilizza una combinazione di **Computer Vision** e **Ragionamento Multimodale** per assistere i medici nell'identificazione e localizzazione di anomalie polmonari, con un focus specifico sulla polmonite.
 
-### 1. Build dell'Immagine
+Il sistema non si limita a fornire un esito positivo/negativo, ma genera un **report di ragionamento spiegabile (XAI)** che permette al clinico di comprendere il processo decisionale dell'intelligenza artificiale.
 
-Per costruire l'immagine Docker è necessario utilizzare lo script `build.sh` presente nella cartella `docker/`. Lo script supporta due modalità: **CPU** (default) e **GPU**.
+### ✨ Funzionalità Chiave
 
-#### Esecuzione Standard (CPU / Mac Apple Silicon)
-Se non si dispone di una scheda video NVIDIA, eseguire semplicemente lo script. Questo installerà la versione di PyTorch ottimizzata per CPU.
+- 🔍 **Localizzazione Precisa**: Individuazione di aree sospette tramite un Ensemble di modelli YOLO.
+- 🧠 **Ragionamento Clinico**: Analisi multimodale basata su Large Language Models (LLM) per convalidare i reperti.
+- 📚 **Integrazione RAG**: Accesso a una base di conoscenza medica (linee guida Fleischner, anatomia) per standardizzare i referti.
+- 📊 **Dashboard Analitica**: Monitoraggio delle prestazioni e statistiche storiche delle analisi effettuate.
+- 📄 **Reportistica Professionale**: Generazione istantanea di report clinici in formato PDF.
+
+---
+
+## 🛠️ Architettura e Tecnologie
+
+Oltre ai linguaggi core, il progetto sfrutta:
+
+- **Visione**: Swin Transformer-B per la classificazione globale, YOLOv10/v11 per la localizzazione locale.
+- **RAG**: ChromaDB e FastEmbed per il recupero di linee guida cliniche in tempo reale.
+- **Containerizzazione**: Docker e Docker Compose per un deployment riproducibile.
+
+---
+
+## 🚀 Guida Rapida alla Configurazione
+
+### 1. Preparazione dell'Ambiente
+
+Il progetto è interamente containerizzato. Spostati nella cartella `docker/` per iniziare.
 
 ```bash
 cd docker
-./build.sh
+./build.sh  # Per build standard (CPU/Mac)
+# OPPURE
+./build.sh gpu  # Per supporto accelerazione hardware NVIDIA
 ```
 
-#### Esecuzione con Supporto GPU (NVIDIA CUDA)
-Se si intende utilizzare l'accelerazione hardware su scheda video NVIDIA, passare l'argomento `gpu`. Questo configurerà il container con i driver CUDA 13.0 e PyTorch compatibile.
+### 2. Avvio del Sistema
+
+Lancia il container montando la cartella del progetto:
 
 ```bash
-cd docker
-./build.sh gpu
-```
-
-### 2. Utilizzo del container
-
-L'avvio del container avviene tramite lo script `run.sh`, che monta la cartella del codice sorgente all'interno del container. Il container mappa la cartella fornita su `/app`.
-
-**Nota:** Gli esempi seguenti assumono di trovarsi all'interno della cartella `docker/` dove risiede lo script. Poiché il codice del progetto si trova nella cartella `pneumonia_project`, useremo il percorso relativo `../pneumonia_project`.
-
-#### Esecuzione Standard (CPU)
-```bash
-# Sintassi: ./run.sh <percorso_cartella_progetto>
 ./run.sh ../pneumonia_project
 ```
 
-#### Esecuzione con Accelerazione GPU
-Richiede di aver eseguito il build con l'opzione `gpu`.
+### 3. Lancio dell'Interfaccia Clinica
+
+Una volta dentro il container:
+
 ```bash
-# Sintassi: ./run.sh <percorso_cartella_progetto> gpu
-./run.sh ../pneumonia_project gpu
+python3 -m streamlit run src/ui/app.py
 ```
+
+L'applicazione sarà visibile su: **`http://localhost:8501`**
 
 ---
 
-## 🚀 Lancio dell'Applicazione
+## 🎓 Progetto Universitario
 
-Una volta avviato il container, vi troverete nella shell interna. Per lanciare l'interfaccia grafica Web (Streamlit), seguire questi passaggi:
+Sviluppato come parte del corso di Laurea Magistrale in **Computer Science** presso l'**Università di Parma**. Il sistema è progettato per dimostrare l'integrazione di tecniche moderne di AI in contesti critici come quello medico.
 
-1.  Spostarsi nella cartella dell'interfaccia utente:
-    ```bash
-    cd /app/src/ui
-    ```
+---
 
-2.  Lanciare l'applicazione:
-    ```bash
-    streamlit run app.py
-    ```
-
-L'applicazione sarà accessibile dal browser all'indirizzo indicato nel terminale (solitamente `http://localhost:8501`).
+<p align="center">
+  <i>"L'AI non sostituisce il medico, ma lo potenzia."</i>
+</p>
