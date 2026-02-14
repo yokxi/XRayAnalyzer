@@ -68,3 +68,5 @@ pneumonia_project/data/chromaDB_vector_db/
 pneumonia_project/temp/
 pneumonia_project/archive/
 /pneumonia_project/src/ui/testConversazione_HPC_Immagini.py
+/pneumonia_project/data/chromaDB_vector_db/*
+/pneumonia_project/src/ui/testConversazione_HPC_Immagini.py

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediScan AI - Pneumonia Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-wrapper">
+        <nav class="navbar">
+            <div class="logo">
+                <svg class="medical-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <span>MediScan AI</span>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <section class="hero-section">
+                <div class="hero-text fade-in-up">
+                    <h1>Advanced Pneumonia Detection</h1>
+                    <p class="subtitle">Powered by Artificial Intelligence</p>
+                    <p class="university-credits">University project by <strong>Guida Aurora</strong>, <strong>Leopoldo
+                            Antozzi</strong> and <strong>Martino Birichino (?)</strong></p>
+                    <p class="description">
+                        Upload a chest X-ray image to instantly analyze for signs of pneumonia.
+                        Our deep learning model identifies and highlights potential infection zones with high precision.
+                    </p>
+                </div>
+
+                <div class="upload-container fade-in-up delay-1">
+                    <div class="upload-card" id="drop-zone">
+                        <input type="file" id="file-input" accept="image/*" hidden>
+                        <div class="upload-content">
+                            <div class="pulse-circle">
+                                <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h3>Upload X-Ray Image</h3>
+                            <p>Drag & drop or click to browse</p>
+                            <span class="file-types">Supports JPG, PNG, DICOM</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="result-section" id="result-section" style="display: none;">
+                <div class="result-card fade-in">
+                    <div class="result-header">
+                        <h2>Analysis Result</h2>
+                        <button id="reset-btn" class="icon-btn" title="Analyze New Image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="result-canvas"></canvas>
+                        <div class="loading-overlay" id="loading-overlay">
+                            <div class="medical-spinner"></div>
+                            <p>Analyzing Scan...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
