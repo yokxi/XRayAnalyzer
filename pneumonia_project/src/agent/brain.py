@@ -93,6 +93,35 @@ class MedicalAgent:
             print(f"[Self-RAG] Errore verifica: {e}")
             return generated_analysis, False
 
+    def run_roi_analysis(self, cropped_img, location_text="area selezionata manualmente"):
+        """Analyze a manually selected ROI crop from the physician."""
+        # Apply CLAHE on the crop for better contrast
+        clahe_crop = self.vision.apply_clahe(cropped_img)
+
+        # RAG context: anatomy category for anatomical validation
+        roi_queries = self.generate_queries(f"analisi regione {location_text} anomalie radiografiche")
+        rag_context = self.rag.search(roi_queries, k=4, category="anatomia")
+
+        # Build prompt and call HPC
+        roi_prompt = prompts.ROI_ANALYSIS_PROMPT.format(
+            location_text=location_text,
+            rag_context=rag_context
+        )
+        roi_analysis = self.call_hpc(roi_prompt, clahe_crop)
+
+        # Self-correction step
+        roi_analysis, was_corrected = self.verify_and_correct(roi_analysis, rag_context)
+
+        # Visual reference from atlas
+        ref_image = self.rag.get_visual_reference(roi_analysis)
+
+        return {
+            "analysis": roi_analysis,
+            "was_corrected": was_corrected,
+            "ref_image": ref_image,
+            "clahe_crop": clahe_crop
+        }
+
     def run_full_pipeline_streaming(self, image_path, user_query, user_metadata=None):
         """
         Workflow ibrido: Visione Artificiale (Swin+YOLO) seguita da Ragionamento Clinico (GPT-4o).

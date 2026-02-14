@@ -96,3 +96,29 @@ If the analysis is CORRECT, output the word: "VERIFIED".
 If the analysis contains ERRORS, output a CORRECTED VERSION of the analysis (in Italian).
 Output ONLY "VERIFIED" or the [Corrected Analysis].
 """
+
+# ROI (Region of Interest) Analysis Prompt
+ROI_ANALYSIS_PROMPT = """
+You are an expert Radiologist AI.
+Analyze this specific CROP (region of interest) manually selected by the physician from a Chest X-Ray.
+
+**Context**:
+- This area was manually selected by the physician for deeper investigation.
+- The region corresponds to: {location_text}
+- RAG Anatomical Guidelines: {rag_context}
+
+**Task**:
+1. Describe what is visible in this region: **texture**, **density**, **margins**, and any **abnormal patterns**.
+2. Identify any pathological findings: consolidations, opacities, nodules, effusions, anatomical alterations.
+3. **Exclusion**: Rule out normal anatomical structures (rib crossings, vessel end-on, scapular overlap).
+4. If no abnormality is found, clearly state the region appears normal.
+
+**Conclusion**:
+Provide a clinical assessment of this specific area.
+
+Output Format (in ITALIAN):
+- **Regione Analizzata**: Descrizione anatomica della zona.
+- **Reperto**: Descrizione morfologica dettagliata.
+- **Analisi Differenziale**: Patologico vs normale/artefattuale.
+- **Conclusione**: [Reperto Patologico Sospetto / Reperto Nella Norma]
+"""

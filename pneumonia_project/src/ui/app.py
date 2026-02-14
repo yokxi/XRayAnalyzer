@@ -4,6 +4,7 @@ from datetime import datetime
 from PIL import Image
 import pandas as pd
 import altair as alt
+from streamlit_cropper import st_cropper
 from src.agent.brain import MedicalAgent
 from src.utils.pdf_generator import generate_pdf_report
 from src.utils.archive import save_analysis, list_analyses, load_analysis, delete_analysis, is_already_archived, compute_image_hash, get_performance_stats
@@ -198,6 +199,42 @@ def show_save_archive_dialog(results, user_pos):
                 st.toast(f"Analisi '{custom_name}' salvata!", icon=":material/check_circle:")
                 st.rerun()
 
+@st.dialog("Analisi Area Specifica (ROI)", width="large")
+def show_roi_cropper_dialog(clahe_img):
+    st.markdown("Seleziona un'area di interesse sull'immagine per un'analisi mirata.")
+
+    cropped_img = st_cropper(
+        clahe_img,
+        realtime_update=True,
+        box_color="#3b82f6",
+        aspect_ratio=None,
+        return_type="image"
+    )
+
+    if st.button("Analizza Area Selezionata", type="primary", width="stretch", icon=":material/search:"):
+        with st.spinner("Analisi ROI in corso..."):
+            roi_result = agent.run_roi_analysis(cropped_img)
+
+        st.session_state.roi_result = roi_result
+
+        st.markdown("---")
+        st.markdown("#### Risultato Analisi ROI")
+
+        correction_tag = " (Verificato e Corretto)" if roi_result['was_corrected'] else " (Verificato)"
+        st.markdown(f"**Stato verifica:** {correction_tag}")
+
+        st.markdown(roi_result['analysis'])
+
+        if roi_result.get('ref_image') is not None:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(roi_result['clahe_crop'], caption="Area Selezionata (CLAHE)", use_container_width=True)
+            with col2:
+                st.image(roi_result['ref_image'], caption="Riferimento Atlante", use_container_width=True)
+        else:
+            st.image(roi_result['clahe_crop'], caption="Area Selezionata (CLAHE)", width=300)
+
+
 # --- SIDEBAR ---
 with st.sidebar:
     st.markdown(SIDEBAR_HEADER, unsafe_allow_html=True)
@@ -355,12 +392,15 @@ if nav_page == "Terminale Analisi":
             # Action Buttons Area - Redesigned to 2 per row
             st.markdown('<div style="margin-top: 10px; margin-bottom: 25px;">', unsafe_allow_html=True)
 
-            # Row 1: Observation and Export
-            act_col1, act_col2 = st.columns(2)
+            # Row 1: Observation, ROI and Export
+            act_col1, act_col2, act_col3 = st.columns(3)
             with act_col1:
                 if st.button("Ragionamento", width="stretch", type="primary", icon=":material/psychology_alt:"):
                     show_reasoning_modal(reasoning_data)
             with act_col2:
+                if st.button("Analizza Area", width="stretch", icon=":material/crop:"):
+                    show_roi_cropper_dialog(processed_img)
+            with act_col3:
                 pdf_bytes = generate_pdf_report(reasoning_data, cls_data, detections)
                 st.download_button(
                     label="Scarica PDF",
