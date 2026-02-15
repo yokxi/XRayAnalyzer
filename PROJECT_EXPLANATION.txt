@@ -1,14 +1,14 @@
 ================================================================================
           PRESENTAZIONE COMPLETA: PROGETTO XRayAnalyzer
-       (Guida Discorsiva e Approfondita per Esposizione di 20 Minuti)
+       (Guida Discorsiva e Approfondita - Suddivisione per 3 Relatori)
 ================================================================================
 
 Questa documentazione funge da "vademecum" per la discussione del progetto.
-I contenuti sono organizzati per fluire naturalmente da un argomento all'altro,
-permettendo di dimostrare sia la visione clinica che la competenza ingegneristica.
+I contenuti sono organizzati per fluire dal problema clinico verso la soluzione
+tecnologica, permettendo ai 3 relatori di alternarsi in modo naturale.
 
 --------------------------------------------------------------------------------
-PARTE 1: IL CONTESTO CLINICO E L'ESIGENZA TECNOLOGICA (0-4 Minuti)
+[Leo] PARTE 1: IL CONTESTO CLINICO E L'ESIGENZA TECNOLOGICA (0-3 Minuti)
 --------------------------------------------------------------------------------
 
 Punti da trattare:
@@ -29,28 +29,7 @@ potenza del Deep Learning locale con una base di conoscenza medica globale."
 Concetti chiave: Explainable AI (XAI), Clinical Decision Support, Medical Imaging.
 
 --------------------------------------------------------------------------------
-PARTE 2: L'ECOSISTEMA DI SVILUPPO E IL DEPLOYMENT (4-7 Minuti)
---------------------------------------------------------------------------------
-
-Dettagli Tecnici:
-"Passiamo ora all'infrastruttura. Per un progetto medico, la riproducibilità è
-fondamentale. Abbiamo scelto Docker come base per garantire che il software
-giri esattamente allo stesso modo su ogni macchina.
-
-- L'ambiente: Utilizziamo Ubuntu Noble con Python 3.12. Abbiamo configurato il
-  container con supporto per l'accelerazione GPU tramite NVIDIA Container Toolkit,
-  permettendo un'inferenza dei modelli Vision e LLM in tempo reale.
-- Gestione dei Metadati: Ogni analisi inizia con la generazione di un Hash MD5
-  dell'immagine. Questo è un dettaglio ingegneristico cruciale: assicura che se
-  un medico carica due volte la stessa lastra, il sistema recuperi l'analisi
-  preesistente senza sprecare risorse computazionali o generare duplicati
-  nell'archivio.
-- La scelta di Streamlit: Non volevo solo un backend, ma uno strumento pronto
-  all'uso. Streamlit ci ha permesso di creare un'interfaccia 'Medical-Grade'
-  estremamente fluida, focalizzata sulla visualizzazione dei dati clinici."
-
---------------------------------------------------------------------------------
-PARTE 3: LA PIPELINE DI VISIONE - DAL PIXEL ALL'ANOMALIA (7-11 Minuti)
+[Leo] PARTE 2: LA PIPELINE DI VISIONE - DAL PIXEL ALL'ANOMALIA (3-7 Minuti)
 --------------------------------------------------------------------------------
 
 Il Flusso Visivo:
@@ -59,7 +38,7 @@ modelli, ma dalla qualità del segnale.
 
 Il Pre-processing (CLAHE):
 Molte radiografie mostrano un contrasto povero. Abbiamo implementato l'algoritmo
-CLAHE (Contrast Limited Adaptive Histogram Equalization). A differenza di
+CLAHE (Contrast Limited Adaptive Histogram Equalization) via OpenCV. A differenza di
 un'equalizzazione standard che può creare artefatti (rumore), CLAHE opera in
 modo adattivo locale, permettendo all'AI di vedere opacità 'velate' che
 sfuggirebbero all'occhio stanco.
@@ -78,7 +57,7 @@ Perché un solo modello non basta? Abbiamo implementato una strategia a due live
    dell'anomalia."
 
 --------------------------------------------------------------------------------
-PARTE 4: RAG E RAGIONAMENTO MULTIMODALE - L'AGENTE MEDICO (11-15 Minuti)
+[Aurora] PARTE 3: KNOWLEDGE BASE E RAG (7-10 Minuti)
 --------------------------------------------------------------------------------
 
 L'Intelligenza e il Recupero Documentale:
@@ -91,51 +70,64 @@ protocolli sulla tecnica radiologica e un atlante di anatomia. Usando ChromaDB
 e gli embedding del modello Multilingual-E5-Large, il nostro Agente non 'tira
 a indovinare'. Quando trova un'ombra in una zona specifica, interroga il
 database e dice: 'In base all'anatomia del lobo superiore, questo reperto
-potrebbe essere compatibile con...'.
+potrebbe essere compatibile con...'."
+
+--------------------------------------------------------------------------------
+[Martin] PARTE 4: AGENTE, ARBITRATO E RAGIONAMENTO (10-13 Minuti)
+--------------------------------------------------------------------------------
 
 L'Arbitrato Multimodale (Qwen-VL-72B):
-Qui interviene il Large Language Model. L'LLM riceve tre input:
-1. Il ritaglio (crop) dell'anomalia in alta risoluzione.
-2. Le linee guida mediche recuperate dal RAG.
+"Qui interviene il Large Language Model, che agisce da Agente Senior. L'LLM riceve
+tre input:
+1. Il ritaglio (crop) dell'anomalia in alta risoluzione eseguito da YOLO.
+2. Le linee guida mediche recuperate dal RAG (appena descritte).
 3. Il contesto globale fornito dai modelli di visione.
+
 L'LLM agisce da medico esperto senior: arbitra tra i reperti visivi e la teoria
 clinica. Se YOLO trova un box che però coincide con la sovrapposizione delle
 scapole (un classico errore dell'AI), l'arbitro LLM è in grado di identificarlo
 e classificarlo come reperto non patologico."
 
 --------------------------------------------------------------------------------
-PARTE 5: TRASPARENZA, SELF-CORRECTION E REPORTING (15-18 Minuti)
+[Martin] PARTE 5: TRASPARENZA, ARCHITETTURA E REPORTING (13-17 Minuti)
 --------------------------------------------------------------------------------
 
 Validazione e Trustworthiness:
 "Come garantiamo che l'AI non allucini? Abbiamo inserito un Self-Correction Loop.
 L'Agente Senior, dopo aver scritto il referto, lo ri-analizza confrontandolo con
-la fonte RAG. Se l'AI ha usato termini inappropriati o ha ignorato una linea
-guida del protocollo, si corregge autonomamente prima che l'utente veda il
-risultato.
+la fonte RAG. Si corregge autonomamente prima che l'utente veda il risultato.
 
 L'esperienza Utente (Streaming Mode):
-Nella UI non mostriamo solo l'esito finale. L'utente assiste allo 'Streaming del
-Pensiero'. Vedere l'AI che dice 'Analizzando la tecnica della proiezione PA...',
-poi 'Recuperando dati anatomici...', costruisce una relazione di fiducia medico-IA.
+Nella UI Streamlit, l'utente assiste allo 'Streaming del Pensiero'. Vedere l'AI
+che dice 'Analizzando la tecnica della proiezione...', poi 'Recuperando dati...',
+costruisce una relazione di fiducia medico-IA. Infine, il Report PDF generato
+con FPDF è una perizia tecnica completa.
 
-Infine, il Report PDF: Generato istantaneamente con FPDF, questo documento
-non è solo un riassunto, ma una perizia tecnica asseverata dall'AI, completa di
-immagini di riferimento dell'atlante medico per un confronto visivo immediato."
+Architettura e Ecosistema:
+- Docker & Ambiente: Usiamo Ubuntu Noble con accelerazione GPU NVIDIA Toolkit.
+- Hash MD5: Ogni analisi è indicizzata tramite hash per evitare duplicati.
+
+Sintesi del Toolstack:
+
+| Categoria              | Tool / Modello                                      |
+|:-----------------------|:----------------------------------------------------|
+| **Backend / UI**       | Python 3.12, Streamlit                             |
+| **Visione (CNN/Transf)**| YOLO v10, YOLO v11, Swin Transformer-B              |
+| **Multimodal LLM**     | Qwen-VL-72B (via HPC Endpoint)                      |
+| **Vector DB / RAG**    | ChromaDB, FastEmbed (Multilingual-E5-Large)         |
+| **Deployment**         | Docker, NVIDIA Container Toolkit, Ubuntu Noble      |
+| **Utilities**          | OpenCV (CLAHE), FPDF (PDF), Pandas/Altair (Stats)   |
 
 --------------------------------------------------------------------------------
-PARTE 6: RISULTATI, PERFORMANCE E VISIONE FUTURA (18-20 Minuti)
+[Martin] PARTE 6: RISULTATI E VISIONE FUTURA (17-20 Minuti)
 --------------------------------------------------------------------------------
 
 Metriche e Conclusioni:
-"Guardando alla Dashboard di Performance, vediamo come il sistema mantiene
-traccia del tasso di positività e della confidenza media. Questo ci permette di
-monitorare il 'salute' del sistema stesso nel tempo.
+"Guardando alla Dashboard di Performance, vediamo come il sistema monitora
+il tasso di positività e la confidenza media nel tempo.
 
-In conclusione, XRayAnalyzer dimostra che il futuro della medicina non è
-nell'automazione completa, ma nell'aumento dell'intelligenza umana. Abbiamo
-creato un ponte tra i pixel del Deep Learning e i concetti del linguaggio
-clinico.
+In conclusione, XRayAnalyzer dimostra che il futuro della medicina è
+nell'aumento dell'intelligenza umana.
 Le prossime evoluzioni? Estendere la KB al linguaggio DICOM nativo e integrare
 modelli specifici per le malattie rare e i dispositivi medici (pacemaker, tubi),
 rendendo il sistema uno strumento a 360 gradi per la radiologia moderna."
@@ -146,7 +138,6 @@ CONSIGLI PER LA DISCUSSIONE (Q&A):
    LLM a 1024px, garantendo risposte in pochi secondi senza perdere dettaglio."
 2. Sulla Precisione: "L'uso dell'Ensemble (Swin + YOLO) riduce i falsi negativi,
    mentre l'arbitrato LLM + RAG abbatte i falsi positivi."
-3. Sul Database: "ChromaDB ci permette di scalare: oggi abbiamo polmonite e
-   anatomia, domani possiamo aggiungere refertazioni oncologiche semplicemente
-   aggiungendo file PDF alla cartella di knowledge base."
+3. Sul Database: "ChromaDB ci permette di scalare caricando semplicemente nuovi
+   file PDF alla cartella di knowledge base."
 ================================================================================
