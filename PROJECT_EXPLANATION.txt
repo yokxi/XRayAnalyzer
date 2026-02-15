@@ -141,3 +141,26 @@ CONSIGLI PER LA DISCUSSIONE (Q&A):
 3. Sul Database: "ChromaDB ci permette di scalare caricando semplicemente nuovi
    file PDF alla cartella di knowledge base."
 ================================================================================
+
+--------------------------------------------------------------------------------
+[Martin] PARTE 8: RIFERIMENTI E RISORSE (Conclusioni e Fonti)
+--------------------------------------------------------------------------------
+
+Core Frameworks & UI:
+- Streamlit (https://streamlit.io/)
+- Python 3.12 (https://www.python.org/)
+
+Visione & Deep Learning:
+- Ultralytics YOLO v10/v11 (https://github.com/ultralytics/ultralytics)
+- Swin Transformer (https://github.com/microsoft/Swin-Transformer)
+- OpenCV (https://opencv.org/)
+
+NLP, RAG & Multimodal AI:
+- Qwen-VL-72B (https://github.com/QwenLM/Qwen-VL)
+- ChromaDB (https://www.trychroma.com/)
+- FastEmbed & LangChain (https://github.com/qdrant/fastembed)
+
+Infrastruttura & Clinica:
+- Docker (https://www.docker.com/)
+- Linee Guida Fleischner Society (https://www.fleischnersociety.org/)
+- FPDF2 (https://pyfpdf.github.io/fpdf2/)
