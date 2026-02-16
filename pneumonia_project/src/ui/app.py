@@ -582,14 +582,14 @@ elif nav_page == "Performance":
             {"Tipologia": "Sani (Negativi)", "Quantità": stats['negative'], "Color": "#22c55e"}
         ])
 
-        c = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('Tipologia', sort=None, axis=alt.Axis(labelAngle=0)),
-            y='Quantità',
+        c = alt.Chart(chart_data).mark_bar(size=60).encode(
+            x=alt.X('Tipologia', sort=None, axis=alt.Axis(labelAngle=0, title=None)),
+            y=alt.X('Quantità', axis=alt.Axis(title="Numero di Analisi")),
             color=alt.Color('Tipologia', scale=alt.Scale(
                 domain=['Polmonite (Positivi)', 'Sani (Negativi)'],
                 range=['#ef4444', '#22c55e']
             ), legend=None),
             tooltip=['Tipologia', 'Quantità']
-        ).properties(height=300)
+        ).properties(height=350)
 
         st.altair_chart(c, theme="streamlit", width="stretch")

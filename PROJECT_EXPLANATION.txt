@@ -1,0 +1,166 @@
+================================================================================
+          PRESENTAZIONE COMPLETA: PROGETTO XRayAnalyzer
+       (Guida Discorsiva e Approfondita - Suddivisione per 3 Relatori)
+================================================================================
+
+Questa documentazione funge da "vademecum" per la discussione del progetto.
+I contenuti sono organizzati per fluire dal problema clinico verso la soluzione
+tecnologica, permettendo ai 3 relatori di alternarsi in modo naturale.
+
+--------------------------------------------------------------------------------
+[Leo] PARTE 1: IL CONTESTO CLINICO E L'ESIGENZA TECNOLOGICA (0-3 Minuti)
+--------------------------------------------------------------------------------
+
+Punti da trattare:
+"Iniziamo analizzando il problema. In radiologia toracica, identificare precocemente
+una polmonite può fare la differenza tra una cura rapida e una complicazione
+grave. Tuttavia, i radiologi oggi si trovano a gestire volumi di lavoro enormi,
+spesso sotto pressione. Il mio obiettivo con XRayAnalyzer non è stato quello di
+distillare un semplice esito 'SI/NO', ma di creare un sistema di Intelligenza
+Artificiale spiegabile (XAI).
+
+Tradizionalmente, i sistemi di Computer-Aided Diagnosis (CAD) sono stati visti
+con scetticismo perché agiscono come 'Black Boxes': estraggono un risultato ma
+non spiegano il perché. XRayAnalyzer rompe questo paradigma integrando la
+visione artificiale classica con le capacità di ragionamento dei Large Language
+Models Multimodali. In questa presentazione, vedremo come abbiamo fuso la
+potenza del Deep Learning locale con una base di conoscenza medica globale."
+
+Concetti chiave: Explainable AI (XAI), Clinical Decision Support, Medical Imaging.
+
+--------------------------------------------------------------------------------
+[Leo] PARTE 2: LA PIPELINE DI VISIONE - DAL PIXEL ALL'ANOMALIA (3-7 Minuti)
+--------------------------------------------------------------------------------
+
+Il Flusso Visivo:
+"Entriamo nel cuore algoritmico della visione. L'analisi visiva non parte dai
+modelli, ma dalla qualità del segnale.
+
+Il Pre-processing (CLAHE):
+Molte radiografie mostrano un contrasto povero. Abbiamo implementato l'algoritmo
+CLAHE (Contrast Limited Adaptive Histogram Equalization) via OpenCV. A differenza di
+un'equalizzazione standard che può creare artefatti (rumore), CLAHE opera in
+modo adattivo locale, permettendo all'AI di vedere opacità 'velate' che
+sfuggirebbero all'occhio stanco.
+
+L'Ensemble Multi-Livello:
+Perché un solo modello non basta? Abbiamo implementato una strategia a due livelli:
+1. Visione Globale (Swin Transformer-B): I Transformer, originari del linguaggio,
+   qui analizzano l'immagine tramite 'Sliding Windows'. Swin eccelle nel
+   comprendere il contesto globale: se c'è un'infiammazione diffusa in tutto
+   il polmone, lui la cattura.
+2. Visione Locale (YOLO v10 & v11): Qui cerchiamo la precisione. Utilizziamo un
+   Ensemble di due versioni di YOLO per localizzare i bounding box.
+   La vera innovazione qui è l'uso del Weighted Box Fusion (WBF): invece di
+   usare algoritmi semplici che scartano i box (come NMS), WBF fonde le aree di
+   confidenza dei vari modelli per creare la delimitazione più accurata possibile
+   dell'anomalia."
+
+--------------------------------------------------------------------------------
+[Aurora] PARTE 3: KNOWLEDGE BASE E RAG (7-10 Minuti)
+--------------------------------------------------------------------------------
+
+L'Intelligenza e il Recupero Documentale:
+"Ecco il punto di svolta del progetto: l'integrazione del Retrieval-Augmented
+Generation (RAG).
+
+Il Database Vettoriale e RAG:
+Abbiamo digitalizzato una base di conoscenza composta da linee guida Fleischner,
+protocolli sulla tecnica radiologica e un atlante di anatomia. Usando ChromaDB
+e gli embedding del modello Multilingual-E5-Large, il nostro Agente non 'tira
+a indovinare'. Quando trova un'ombra in una zona specifica, interroga il
+database e dice: 'In base all'anatomia del lobo superiore, questo reperto
+potrebbe essere compatibile con...'."
+
+--------------------------------------------------------------------------------
+[Martin] PARTE 4: AGENTE, ARBITRATO E RAGIONAMENTO (10-13 Minuti)
+--------------------------------------------------------------------------------
+
+L'Arbitrato Multimodale (Qwen-VL-72B):
+"Qui interviene il Large Language Model, che agisce da Agente Senior. L'LLM riceve
+tre input:
+1. Il ritaglio (crop) dell'anomalia in alta risoluzione eseguito da YOLO.
+2. Le linee guida mediche recuperate dal RAG (appena descritte).
+3. Il contesto globale fornito dai modelli di visione.
+
+L'LLM agisce da medico esperto senior: arbitra tra i reperti visivi e la teoria
+clinica. Se YOLO trova un box che però coincide con la sovrapposizione delle
+scapole (un classico errore dell'AI), l'arbitro LLM è in grado di identificarlo
+e classificarlo come reperto non patologico."
+
+--------------------------------------------------------------------------------
+[Martin] PARTE 5: TRASPARENZA, ARCHITETTURA E REPORTING (13-17 Minuti)
+--------------------------------------------------------------------------------
+
+Validazione e Trustworthiness:
+"Come garantiamo che l'AI non allucini? Abbiamo inserito un Self-Correction Loop.
+L'Agente Senior, dopo aver scritto il referto, lo ri-analizza confrontandolo con
+la fonte RAG. Si corregge autonomamente prima che l'utente veda il risultato.
+
+L'esperienza Utente (Streaming Mode):
+Nella UI Streamlit, l'utente assiste allo 'Streaming del Pensiero'. Vedere l'AI
+che dice 'Analizzando la tecnica della proiezione...', poi 'Recuperando dati...',
+costruisce una relazione di fiducia medico-IA. Infine, il Report PDF generato
+con FPDF è una perizia tecnica completa.
+
+Architettura e Ecosistema:
+- Docker & Ambiente: Usiamo Ubuntu Noble con accelerazione GPU NVIDIA Toolkit.
+- Hash MD5: Ogni analisi è indicizzata tramite hash per evitare duplicati.
+
+Sintesi del Toolstack:
+
+| Categoria              | Tool / Modello                                      |
+|:-----------------------|:----------------------------------------------------|
+| **Backend / UI**       | Python 3.12, Streamlit                             |
+| **Visione (CNN/Transf)**| YOLO v10, YOLO v11, Swin Transformer-B              |
+| **Multimodal LLM**     | Qwen-VL-72B (via HPC Endpoint)                      |
+| **Vector DB / RAG**    | ChromaDB, FastEmbed (Multilingual-E5-Large)         |
+| **Deployment**         | Docker, NVIDIA Container Toolkit, Ubuntu Noble      |
+| **Utilities**          | OpenCV (CLAHE), FPDF (PDF), Pandas/Altair (Stats)   |
+
+--------------------------------------------------------------------------------
+[Martin] PARTE 6: RISULTATI E VISIONE FUTURA (17-20 Minuti)
+--------------------------------------------------------------------------------
+
+Metriche e Conclusioni:
+"Guardando alla Dashboard di Performance, vediamo come il sistema monitora
+il tasso di positività e la confidenza media nel tempo.
+
+In conclusione, XRayAnalyzer dimostra che il futuro della medicina è
+nell'aumento dell'intelligenza umana.
+Le prossime evoluzioni? Estendere la KB al linguaggio DICOM nativo e integrare
+modelli specifici per le malattie rare e i dispositivi medici (pacemaker, tubi),
+rendendo il sistema uno strumento a 360 gradi per la radiologia moderna."
+
+================================================================================
+CONSIGLI PER LA DISCUSSIONE (Q&A):
+1. Sulla Latenza: "Il sistema bilancia potenza e velocità ridimensionando i crop
+   LLM a 1024px, garantendo risposte in pochi secondi senza perdere dettaglio."
+2. Sulla Precisione: "L'uso dell'Ensemble (Swin + YOLO) riduce i falsi negativi,
+   mentre l'arbitrato LLM + RAG abbatte i falsi positivi."
+3. Sul Database: "ChromaDB ci permette di scalare caricando semplicemente nuovi
+   file PDF alla cartella di knowledge base."
+================================================================================
+
+--------------------------------------------------------------------------------
+[Martin] PARTE 8: RIFERIMENTI E RISORSE (Conclusioni e Fonti)
+--------------------------------------------------------------------------------
+
+Core Frameworks & UI:
+- Streamlit (https://streamlit.io/)
+- Python 3.12 (https://www.python.org/)
+
+Visione & Deep Learning:
+- Ultralytics YOLO v10/v11 (https://github.com/ultralytics/ultralytics)
+- Swin Transformer (https://github.com/microsoft/Swin-Transformer)
+- OpenCV (https://opencv.org/)
+
+NLP, RAG & Multimodal AI:
+- Qwen-VL-72B (https://github.com/QwenLM/Qwen-VL)
+- ChromaDB (https://www.trychroma.com/)
+- FastEmbed & LangChain (https://github.com/qdrant/fastembed)
+
+Infrastruttura & Clinica:
+- Docker (https://www.docker.com/)
+- Linee Guida Fleischner Society (https://www.fleischnersociety.org/)
+- FPDF2 (https://pyfpdf.github.io/fpdf2/)
