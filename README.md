@@ -55,6 +55,8 @@ Lancia il container montando la cartella del progetto:
 
 ```bash
 ./run.sh ../pneumonia_project
+# OPPURE
+./run.sh ../pneumonia_project gpu  # Per supporto accelerazione hardware NVIDIA
 ```
 
 ### 3. Lancio dell'Interfaccia Clinica
